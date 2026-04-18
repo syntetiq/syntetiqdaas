@@ -15,6 +15,7 @@ use Symfony\Component\Yaml\Yaml;
 use SyntetiQ\Bundle\DataSetBundle\Async\Topic\ImportDataSetBatchTopic;
 use SyntetiQ\Bundle\DataSetBundle\Entity\DataSet;
 use SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem;
+use SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItemTag;
 use SyntetiQ\Bundle\DataSetBundle\Entity\ItemObjectConfiguration;
 use SyntetiQ\Bundle\DataSetBundle\Model\Group;
 use SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemImageManager;
@@ -114,6 +115,8 @@ class ImportDataSetBatchProcessor implements MessageProcessorInterface, TopicSub
             $dataSetItem->setImgHeight((int) $imageInfo[1]);
             $dataSetItem->setImgWidth((int) $imageInfo[0]);
             $dataSetItem->setDataSet($dataSet);
+            $dataSetItem->setOwner($dataSet->getOwner());
+            $dataSetItem->setOrganization($dataSet->getOrganization());
             $dataSetItem->setSourceType($sourceType);
             if ($sourceIntegration) {
                 $dataSetItem->setSourceIntegration($sourceIntegration);
@@ -124,6 +127,7 @@ class ImportDataSetBatchProcessor implements MessageProcessorInterface, TopicSub
 
             $itemMetadata = $metadataByItemPath[$this->stripDatasetRootPrefix($itemFile, $datasetRoot)] ?? null;
             $dataSetItem->setTags(is_array($itemMetadata) ? ($itemMetadata['tags'] ?? []) : ($tag !== null ? [$tag] : []));
+            $this->syncTagOwnership($dataSetItem);
             if (is_array($itemMetadata) && array_key_exists('ready', $itemMetadata)) {
                 $dataSetItem->setReady((bool) $itemMetadata['ready']);
             }
@@ -153,6 +157,8 @@ class ImportDataSetBatchProcessor implements MessageProcessorInterface, TopicSub
                 $labelName = $labels[$classId] ?? sprintf('class_%d', $classId);
 
                 $itemObjectConfiguration = new ItemObjectConfiguration();
+                $itemObjectConfiguration->setOwner($dataSetItem->getOwner());
+                $itemObjectConfiguration->setOrganization($dataSetItem->getOrganization());
                 $itemObjectConfiguration->setName($labelName);
 
                 [$minX, $minY, $maxX, $maxY] = $this->denormalizeBoundingBox(
@@ -221,6 +227,18 @@ class ImportDataSetBatchProcessor implements MessageProcessorInterface, TopicSub
 
         if ($items !== []) {
             $em->flush();
+        }
+    }
+
+    private function syncTagOwnership(DataSetItem $dataSetItem): void
+    {
+        foreach ($dataSetItem->getItemTags() as $itemTag) {
+            if (!$itemTag instanceof DataSetItemTag) {
+                continue;
+            }
+
+            $itemTag->setOwner($dataSetItem->getOwner());
+            $itemTag->setOrganization($dataSetItem->getOrganization());
         }
     }
 
