@@ -1,0 +1,179 @@
+services:
+    oro_datagrid.extension.mass_action.actions.ajax.mass_delete_limiter:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassDelete\DataSetItemsMassDeleteLimiter
+        arguments:
+            - '@oro_security.acl_helper'
+
+    oro_sync.content.data_update_topic_sender:
+        class: SyntetiQ\Bundle\DataSetBundle\Sync\Content\ChunkedDataUpdateTopicSender
+        public: true
+        arguments:
+            - '@oro_sync.websocket_client'
+            - '@oro_sync.client.connection_checker'
+            - '@security.token_storage'
+
+    syntetiq.datagrid.mass_action.handler.data_set_item_mark_ready:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassAction\SetReadyMassActionHandler
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@translator'
+            - true
+
+    syntetiq.datagrid.mass_action.handler.data_set_item_mark_not_ready:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassAction\SetReadyMassActionHandler
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@translator'
+            - false
+
+    syntetiq.datagrid.mass_action.handler.data_set_item_reset_labels:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassAction\ResetLabelsMassActionHandler
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@translator'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemLabelResetter'
+
+    syntetiq.datagrid.mass_action.handler.data_set_item_add_tag:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassAction\AddTagMassActionHandler
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@translator'
+
+    syntetiq.datagrid.mass_action.handler.data_set_item_remove_tag:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassAction\RemoveTagMassActionHandler
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@translator'
+
+    syntetiq.datagrid.mass_action.handler.data_set_item_rename_label:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassAction\RenameLabelMassActionHandler
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@translator'
+
+    syntetiq.datagrid.mass_action.handler.data_set_item_random_split:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\MassAction\RandomSplitMassActionHandler
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@translator'
+
+    SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemImageManager:
+        arguments:
+            - '@oro_attachment.file_manager'
+            - '@liip_imagine'
+            - '@logger'
+
+    SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemLabelResetter:
+        arguments:
+            - '@doctrine'
+
+    SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemNavigationResolver:
+        arguments:
+            - '@doctrine'
+            - '@router'
+
+    SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemSamSegmentationService:
+        arguments:
+            - '@http_client'
+            - '@oro_attachment.file_manager'
+            - '%env(SQ_SAM_API_BASE_URL)%'
+            - '%env(int:SQ_SAM_API_TIMEOUT)%'
+
+    SyntetiQ\Bundle\DataSetBundle\Service\ArchiveChunkUploadManager:
+        arguments:
+            - '@sq.file_manager.import_chunks'
+            - '@SyntetiQ\Bundle\DataSetBundle\Provider\ImportDataSetProvider'
+
+    SyntetiQ\Bundle\DataSetBundle\Service\ImportDataSetArtifactsManager:
+        arguments:
+            - '@sq.file_manager.import_files'
+            - '@sq.file_manager.import_tmp'
+
+    SyntetiQ\Bundle\DataSetBundle\Service\YoloDatasetMaterializer:
+        arguments:
+            - '@oro_attachment.file_manager'
+            - '@syntetiq.serializer.process.serializer'
+
+    SyntetiQ\Bundle\DataSetBundle\Provider\ImportDataSetProvider:
+        public: true
+        arguments:
+            - '@oro_message_queue.client.message_producer'
+            - '@sq.google_cloud_storage.flysystem_filesystem'
+
+    SyntetiQ\Bundle\DataSetBundle\Autocomplete\DataSetSearchHandler:
+        parent: oro_form.autocomplete.search_handler
+        arguments:
+            - 'SyntetiQ\Bundle\DataSetBundle\Entity\DataSet'
+            - ['name']
+        tags:
+            - { name: oro_form.autocomplete.search_handler, alias: data_set_search, acl_resource: syntetiq_model_data_set_view }
+
+    SyntetiQ\Bundle\DataSetBundle\Autocomplete\DataSetItemTagSearchHandler:
+        arguments:
+            - '@doctrine'
+            - '@request_stack'
+        tags:
+            - { name: oro_form.autocomplete.search_handler, alias: data_set_item_tags, acl_resource: syntetiq_model_data_set_view }
+
+    syntetiq.filter.data_set_item_labels:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\Filter\DataSetItemLabelsFilter
+        public: false
+        arguments:
+            - '@form.factory'
+            - '@oro_filter.filter_utility'
+        tags:
+            - { name: oro_filter.extension.orm_filter.filter, type: dataset-item-labels }
+
+    syntetiq.filter.data_set_item_tags:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\Filter\DataSetItemTagsFilter
+        public: false
+        arguments:
+            - '@form.factory'
+            - '@oro_filter.filter_utility'
+        tags:
+            - { name: oro_filter.extension.orm_filter.filter, type: dataset-item-tags }
+
+    syntetiq.filter.data_set_item_bbox_area:
+        class: SyntetiQ\Bundle\DataSetBundle\Datagrid\Filter\DataSetItemBboxAreaFilter
+        public: false
+        arguments:
+            - '@form.factory'
+            - '@oro_filter.filter_utility'
+        tags:
+            - { name: oro_filter.extension.orm_filter.filter, type: dataset-item-bbox-area }
+
+    syntetiq.event_listener.data_set_items_datagrid:
+        class: SyntetiQ\Bundle\DataSetBundle\EventListener\DataSetItemsDataGridListener
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@router'
+            - '@request_stack'
+        tags:
+            - { name: kernel.event_listener, event: oro_datagrid.datagrid.build.before.syntetiq-model-data-set-items-galary-grid, method: onPreBuild }
+            - { name: kernel.event_listener, event: oro_datagrid.orm_datasource.result.before_query.syntetiq-model-data-set-items-galary-grid, method: onResultBeforeQuery }
+            - { name: kernel.event_listener, event: oro_datagrid.orm_datasource.result.after.syntetiq-model-data-set-items-galary-grid, method: onResultAfter }
+            - { name: kernel.event_listener, event: oro_datagrid.datagrid.build.before.syntetiq-model-data-set-items-grid, method: onPreBuild }
+            - { name: kernel.event_listener, event: oro_datagrid.orm_datasource.result.before_query.syntetiq-model-data-set-items-grid, method: onResultBeforeQuery }
+            - { name: kernel.event_listener, event: oro_datagrid.orm_datasource.result.after.syntetiq-model-data-set-items-grid, method: onResultAfter }
+
+    SyntetiQ\Bundle\DataSetBundle\Provider\ExportDataSetProvider:
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@oro_message_queue.client.message_producer'
+            - '@security.token_storage'
+
+    SyntetiQ\Bundle\DataSetBundle\Provider\DataSetQaProvider:
+        public: true
+        arguments:
+            - '@doctrine'
+            - '@oro_message_queue.client.message_producer'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'

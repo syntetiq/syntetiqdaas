@@ -1,0 +1,97 @@
+{% extends '@OroUI/actions/update.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+
+{% oro_title_set({params : {
+    '%identifier%': entity.id|default('N/A'|trans),
+    '%entityName%': 'syntetiq.model.entity_label'|trans
+} }) %}
+
+{% set formAction = entity.id ?
+'' :
+path('syntetiq_model_model_build_create', {modelId : entity.model.id}) %}
+
+{% block navButtons %}
+	<div onclick="goBack()" class="pull-left btn-group icons-holder">
+        <span class=" btn back icons-holder-text">Cancel</span>
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+    {% set html = UI.saveAndCloseButton({
+        'route': 'syntetiq_model_model_build_view',
+        'params': {'id': '$id', '_enableContentProviders': 'mainMenu'}
+    }) %}
+
+{#    {% if entity.id or is_granted('syntetiq_model_model_edit') %}#}
+{#        {% set html = html ~ UI.saveAndStayButton({#}
+{#            'route': 'syntetiq_model_model_edit',#}
+{#            'params': {'id': '$id', '_enableContentProviders': 'mainMenu'}#}
+{#        }) %}#}
+{#    {% endif %}#}
+
+
+	{{ UI.dropdownSaveButton({'html': html}) }}
+
+	{{ parent() }}
+{% endblock navButtons %}
+
+{% block pageHeader %}
+{#    {% if entity.id %}#}
+{#        {% set breadcrumbs = {#}
+{#            'entity': entity,#}
+{#            'indexPath': path('syntetiq_model_model_index'),#}
+{#            'indexLabel': 'syntetiq.model.entity_plural_label'|trans,#}
+{#            'entityTitle': entity.id|default('N/A'|trans)#}
+{#        } %}#}
+{#        {{ parent() }}#}
+{#    {% else %}#}
+        {% set title = 'oro.ui.create_entity'|trans({'%entityName%': 'syntetiq.modelbuild.entity_label'|trans}) %}
+        {% include '@OroUI/page_title_block.html.twig' with { title: title } %}
+{#    {% endif %}#}
+{% endblock pageHeader %}
+
+{% block content_data %}
+    {% set id = 'model-build-edit' %}
+
+    {% set generalBlock %}
+        <div class="responsive-cell">
+            {{ form_row(form.env) }}
+            {{ form_row(form.engine) }}
+            {{ form_row(form.engineModel) }}
+            {{ form_row(form.pretrainedModel) }}
+            {{ form_row(form.epoch) }}
+            {{ form_row(form.imageSize) }}
+            {{ form_row(form.percentTrainItems) }}
+            {{ form_row(form.percentValidationItems) }}
+            {{ form_row(form.percentTestItems) }}
+            {{ form_row(form.readyOnly) }}
+            {{ form_row(form.tags) }}
+            {{ form_widget(form.hiddenEngines) }}
+            {{ form_rest(form) }}
+        </div>
+        <div style=""
+             class="build-item" {{ UI.renderPageComponentAttributes({
+             view: 'syntetiqmodel/js/app/views/model-build-form-view'
+        }) }}
+        ></div>
+    {% endset %}
+
+    {% set dataBlocks = [] %}
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'syntetiq.model.sections.general'|trans,
+        'class': 'active',
+        'subblocks': [{'data': [generalBlock]}]
+    }]) %}
+
+    {% set data = {
+        'formErrors': form_errors(form),
+        'dataBlocks': dataBlocks
+    } %}
+
+    {{ parent() }}
+{% endblock content_data %}

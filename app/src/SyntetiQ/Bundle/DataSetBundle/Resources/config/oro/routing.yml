@@ -1,0 +1,29 @@
+syntetiq_data_set_import_images:
+   resource: "../../../Controller/ItemImageUploadController.php"
+   type: attribute
+   prefix: /dataset/import-images
+
+syntetiq_data_set_import_archive:
+   resource: "../../../Controller/ArchiveImportController.php"
+   type: attribute
+   prefix: /dataset/import-archive
+
+syntetiq_data_set_import_progress:
+   resource: "../../../Controller/DataSetImportProgressController.php"
+   type: attribute
+   prefix: /dataset/import-progress
+
+syntetiq_data_set:
+    resource: "../../../Controller/DataSetController.php"
+    type: attribute
+    prefix: /dataset
+
+syntetiq_data_set_item:
+    resource: "../../../Controller/DataSetItemController.php"
+    type: attribute
+    prefix: /dataset-item
+
+syntetiq_data_set_export:
+    resource: "../../../Controller/DataSetExportController.php"
+    type: attribute
+    prefix: /model-data-set-export

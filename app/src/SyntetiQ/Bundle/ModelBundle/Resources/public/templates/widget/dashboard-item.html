@@ -1,0 +1,39 @@
+<div xmlns="http://www.w3.org/1999/html">
+    Object <%- area.index %>
+</div>
+<div style="display: flex; flex-direction: row;">
+    <div style="position:relative;">
+        <span class="deleteObject" data-index="<%- area.index %>"
+            style="cursor: pointer; padding:10px; position:absolute; margin-top: 10px; display: inline-block; border: 1px solid #1d2124;">delete</span>
+        <div class="control-group control-group-text">
+            <div class="control-label wrap">
+                <label class="attribute-item__term required">Name
+                    <em>*</em>
+                </label>
+            </div>
+            <div class="controls">
+                <input class="name" data-index="<%- area.index %>" type="text" value="<%- area.name %>"
+                    data-validation="{&quot;NotBlank&quot;:{&quot;message&quot;:&quot;This value should not be blank.&quot;,&quot;payload&quot;:null},&quot;Length&quot;:{&quot;maxMessage&quot;:&quot;This value is too long. It should have {{ limit }} character or less.|This value is too long. It should have {{ limit }} characters or less.&quot;,&quot;minMessage&quot;:&quot;This value is too short. It should have {{ limit }} character or more.|This value is too short. It should have {{ limit }} characters or more.&quot;,&quot;exactMessage&quot;:&quot;This value should have exactly {{ limit }} character.|This value should have exactly {{ limit }} characters.&quot;,&quot;charsetMessage&quot;:&quot;This value does not match the expected {{ charset }} charset.&quot;,&quot;max&quot;:255,&quot;min&quot;:null,&quot;charset&quot;:&quot;UTF-8&quot;,&quot;payload&quot;:null}}">
+            </div>
+        </div>
+
+        <div class="control-group control-group-text">
+            <div class="control-label wrap">
+                <label class="attribute-item__term">Latitude</label>
+            </div>
+            <div class="controls">
+                <input class="latitude" data-index ="<%- area.index %>" type="text" value="<%- area.latitude %>">
+            </div>
+        </div>
+        <div class="control-group control-group-text">
+            <div class="control-label wrap">
+                <label class="attribute-item__term">Longitude</label>
+            </div>
+            <div class="controls">
+                <input class="longitude" data-index ="<%- area.index %>" type="text" value="<%- area.longitude %>">
+            </div>
+        </div>
+    </div>
+    <div style="height:<%-area.height %>px; width:<%- area.width %>px;  display:inline-block; margin:10px; background-image: url(<%- imgData %>); background-position: <%- -area.x %>px <%- -area.y %>px">
+    </div>
+</div>

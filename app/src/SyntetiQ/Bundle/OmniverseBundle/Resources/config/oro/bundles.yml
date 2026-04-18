@@ -1,0 +1,2 @@
+bundles:
+    - { name: SyntetiQ\Bundle\OmniverseBundle\SyntetiQOmniverseBundle, priority: 100 }

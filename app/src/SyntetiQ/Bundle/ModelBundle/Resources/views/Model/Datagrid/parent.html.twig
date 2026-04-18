@@ -1,0 +1,5 @@
+{% if record.getValue('parent') is not null %}
+    {{ record.getValue('parent').Name }} | {{ record.getValue('parent').id }}
+{% else %}
+    -
+{% endif %}

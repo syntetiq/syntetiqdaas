@@ -1,0 +1,17 @@
+navigation:
+    menu_config:
+        items:
+            model_tab:
+                label: syntetiq.model.page.title.label
+                uri:   '#'
+                extras:
+                    position: 15
+            model_tab_link:
+                label: syntetiq.navigation.model_management.label
+                route: syntetiq_model_model_index
+        tree:
+            application_menu:
+                children:
+                    model_tab:
+                        children:
+                            model_tab_link: ~

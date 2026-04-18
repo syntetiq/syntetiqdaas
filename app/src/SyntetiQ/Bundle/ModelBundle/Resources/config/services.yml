@@ -1,0 +1,116 @@
+parameters:
+
+services:
+    SyntetiQ\Bundle\ModelBundle\Form\Extension\AclOwnerFieldFormExtension:
+        arguments:
+            - '@security.authorization_checker'
+            - '@oro_security.owner.ownership_metadata_provider'
+            - '@doctrine'
+        tags:
+            - { name: form.type_extension, alias: form, extended_type: 'Symfony\Component\Form\Extension\Core\Type\FormType' }
+
+    SyntetiQ\Bundle\ModelBundle\EventListener\NavigationListener:
+        arguments:
+            - '%kernel.environment%'
+        tags:
+            - { name: kernel.event_listener, event: oro_menu.configure.application_menu, method: onNavigationConfigure }
+
+    SyntetiQ\Bundle\ModelBundle\Service\BuildRuntimeLogViewBuilder:
+        arguments:
+            - '@router'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+
+    SyntetiQ\Bundle\ModelBundle\Dataset\ModelBuildDatasetItemProvider: ~
+    SyntetiQ\Bundle\ModelBundle\Dataset\BuildItemGroupResolver: ~
+
+    syntetiq.serializer.process.serializer:
+        class: Symfony\Component\Serializer\Serializer
+        arguments:
+            - ['@serializer.normalizer.object']
+            - ['@serializer.encoder.xml', '@serializer.encoder.yaml']
+
+    SyntetiQ\Bundle\ModelBundle\Service\DatasetQaReportViewBuilder:
+        arguments:
+            - '@router'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+
+    SyntetiQ\Bundle\ModelBundle\Service\ModelBuildArtifactSyncer:
+        arguments:
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+            - '@logger'
+
+    SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager:
+        arguments:
+            - '@sq.file_manager.processing_artifacts'
+
+    SyntetiQ\Bundle\ModelBundle\Service\ModelBuildQaInputPreparer:
+        arguments:
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\DatasetBuilder'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\ModelBuildDatasetItemProvider'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\YoloDatasetMaterializer'
+            - '@sq.file_manager.model_files'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\BuildItemGroupResolver'
+
+    SyntetiQ\Bundle\ModelBundle\Dataset\DatasetBuilder:
+        arguments:
+            - !tagged_iterator { tag: 'syntetiq_model_dataset_split' }
+            - '%syntetiq_model.engines%'
+
+    SyntetiQ\Bundle\ModelBundle\Dataset\PascalVocXml:
+        arguments:
+            - '@oro_attachment.file_manager'
+            - '@sq.file_manager.model_files'
+            - '@syntetiq.serializer.process.serializer'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\ModelBuildDatasetItemProvider'
+        tags:
+            - { name: 'syntetiq_model_dataset_split' }
+
+    SyntetiQ\Bundle\ModelBundle\Dataset\PascalVoc:
+        arguments:
+            - '@oro_attachment.file_manager'
+            - '@sq.file_manager.model_files'
+            - '@syntetiq.serializer.process.serializer'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\ModelBuildDatasetItemProvider'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\BuildItemGroupResolver'
+        tags:
+            - { name: 'syntetiq_model_dataset_split' }
+
+    SyntetiQ\Bundle\ModelBundle\Dataset\Yolo:
+        arguments:
+            - '@sq.file_manager.model_files'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\ModelBuildDatasetItemProvider'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\YoloDatasetMaterializer'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\BuildItemGroupResolver'
+        tags:
+            - { name: 'syntetiq_model_dataset_split' }
+
+    SyntetiQ\Bundle\ModelBundle\Dataset\Test:
+        tags:
+            - { name: 'syntetiq_model_dataset_split' }
+
+    syntetiq.twig.extension.image_size_extension:
+        class: SyntetiQ\Bundle\ModelBundle\Twig\ImageSizeExtension
+        arguments:
+            - '@oro_platform.twig.service_locator'
+        tags:
+            - { name: twig.extension }
+
+
+
+    SyntetiQ\Bundle\ModelBundle\Provider\ArchiveProvider: ~
+
+    SyntetiQ\Bundle\ModelBundle\EventListener\ModelDeleteListener:
+        arguments:
+            - '@oro_message_queue.client.message_producer'
+        tags:
+            - { name: doctrine.event_listener, event: preRemove }
+
+    SyntetiQ\Bundle\ModelBundle\Provider\ModelBuildArtifactSyncMessageSender:
+        arguments:
+            - '@oro_message_queue.client.message_producer'
+
+    SyntetiQ\Bundle\ModelBundle\Validator\Constraints\HasDatasetSplitGroupsValidator:
+        arguments:
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\ModelBuildDatasetItemProvider'
+        tags:
+            - { name: validator.constraint_validator }

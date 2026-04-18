@@ -1,0 +1,292 @@
+datagrids:
+    syntetiq-model-model-grid:
+        source:
+            acl_resource: syntetiq_model_model_view
+            type: orm
+            query:
+                select:
+                    - mis.id
+                    - mis.name
+                    - mis.description
+                    - COUNT(mb.id) as modelBuildsCount
+                    - ds.name as dsname
+                from:
+                    - { table: SyntetiQ\Bundle\ModelBundle\Entity\Model, alias: mis }
+                join:
+                    left:
+                        modelBuilds:
+                            join: mis.modelBuilds
+                            alias: mb
+                        dataSet:
+                            join: mis.dataSet
+                            alias: ds
+                groupBy: mis.id, ds.id
+        columns:
+            id:
+                label: Id
+            name:
+                label: syntetiq.model.name.label
+            description:
+                label: syntetiq.model.description.label
+                renderable: false
+            dsname:
+                label: syntetiq.model.dataset_name.label
+            modelBuildsCount:
+                label: syntetiq.model.model_builds.label
+                type: field
+                frontend_type: integer
+        sorters:
+            columns:
+                id:
+                    data_name: mis.id
+                name:
+                    data_name: mis.name
+                dsname:
+                    data_name: dsname
+                modelBuildsCount:
+                    data_name: modelBuildsCount
+#            default:
+#                model: ASC
+        filters:
+            columns:
+                name:
+                    type: string
+                    data_name: mis.name
+                description:
+                    type: string
+                    data_name: mis.description
+        properties:
+            view_link:
+                type: url
+                route: syntetiq_model_model_view
+                params: [ id ]
+            update_link:
+                type:    url
+                route:   syntetiq_model_model_edit
+                params:  [ id ]
+        actions:
+            view:
+                type:          navigate
+                label:         View
+                link:          view_link
+                icon:          eye
+                acl_resource:  syntetiq_model_model_view
+                rowAction:     true
+            update:
+                acl_resource:  syntetiq_model_model_edit
+                type:          navigate
+                label:         oro.grid.action.update
+                link:          update_link
+                icon:          edit
+
+    syntetiq-model-recent-models-grid:
+        extends: syntetiq-model-model-grid
+        options:
+            toolbarOptions:
+                hide: true
+                pageSize:
+                    hide: true
+                    default_per_page: 10
+        sorters:
+            default:
+                id: DESC
+
+    syntetiq-model-build-grid:
+        source:
+            #            acl_resource: syntetiq_model_model_view
+            type: orm
+            query:
+                select:
+                    - misBuild
+                from:
+                    - { table: SyntetiQ\Bundle\ModelBundle\Entity\ModelBuild, alias: misBuild }
+                where:
+                    and:
+                        - misBuild.model = :modelId # entity with alias 'entity' sets in event listener
+            bind_parameters:
+                modelId:
+                    default: 0
+        columns:
+            id:
+                label: Id
+            engine:
+                label: Engine
+            engineModel:
+                label: Model type
+            env:
+                label: Environment
+            epoch:
+                label: Epoch
+            imageSize:
+                label: syntetiq.modelbuild.image_size.label
+            artifact:
+                label: Model artifact
+                type: twig
+                template: '@SyntetiQModel/Model/Datagrid/Property/artifact.html.twig'
+                frontend_type: html
+                data_name: artifact
+            output:
+                label: Output
+                type: twig
+                template: '@SyntetiQModel/Model/Datagrid/Property/output.html.twig'
+                frontend_type: html
+                data_name: output
+            error_output:
+                label: Error Output
+                type: twig
+                template: '@SyntetiQModel/Model/Datagrid/Property/error_output.html.twig'
+                frontend_type: html
+                data_name: error_output
+            createdAt:
+                label: oro.ui.created_at
+                frontend_type: datetime
+            startedAt:
+                label: startedAt
+                frontend_type: datetime
+            finishedAt:
+                label: finishedAt
+                frontend_type: datetime
+        properties:
+            view_link:
+                type: url
+                route: syntetiq_model_model_build_view
+                params: [ id ]
+            delete_link:
+                type: url
+                route: syntetiq_model_model_build_delete
+                params: [ id ]
+        actions:
+            view:
+                type: navigate
+                label: View
+                link: view_link
+                icon: eye
+                acl_resource: syntetiq_model_build_view
+                rowAction: true
+            delete:
+                acl_resource: syntetiq_model_model_build_create
+                type: delete
+                label: oro.grid.action.delete
+                link: delete_link
+                icon: trash
+        sorters:
+            columns:
+                id:
+                    data_name: misBuild.id
+            default:
+                id: DESC
+
+    syntetiq-model-recent-model-builds-grid:
+        source:
+            acl_resource: syntetiq_model_model_build_view
+            type: orm
+            query:
+                select:
+                    - mb.id
+                    - mb.engine
+                    - mb.engineModel
+                    - mb.env
+                    - mb.createdAt
+                    - model.name as modelName
+                from:
+                    - { table: SyntetiQ\Bundle\ModelBundle\Entity\ModelBuild, alias: mb }
+                join:
+                    left:
+                        model:
+                            join: mb.model
+                            alias: model
+        columns:
+            id:
+                label: Id
+            modelName:
+                label: syntetiq.modelbuild.model.label
+            engine:
+                label: syntetiq.modelbuild.engine.label
+            engineModel:
+                label: syntetiq.modelbuild.engine_model.label
+            env:
+                label: syntetiq.modelbuild.env.label
+            createdAt:
+                label: oro.ui.created_at
+                frontend_type: datetime
+        properties:
+            view_link:
+                type: url
+                route: syntetiq_model_model_build_view
+                params: [ id ]
+        actions:
+            view:
+                type: navigate
+                label: View
+                link: view_link
+                icon: eye
+                acl_resource: syntetiq_model_model_build_view
+                rowAction: true
+        options:
+            toolbarOptions:
+                hide: true
+                pageSize:
+                    hide: true
+                    default_per_page: 10
+        sorters:
+            columns:
+                id:
+                    data_name: mb.id
+                createdAt:
+                    data_name: mb.createdAt
+            default:
+                createdAt: DESC
+
+    syntetiq-model-pretrained-grid:
+        source:
+            type: orm
+            query:
+                select:
+                    - mp
+                from:
+                    - { table: SyntetiQ\Bundle\ModelBundle\Entity\ModelPretrained, alias: mp }
+                where:
+                    and:
+                        - mp.model = :modelId
+            bind_parameters:
+                modelId:
+                    default: 0
+        columns:
+            id:
+                label: Id
+            name:
+                label: syntetiq.modelpretrained.name.label
+            originalFilename:
+                label: syntetiq.modelpretrained.original_filename.label
+                renderable: false
+            engine:
+                label: syntetiq.modelbuild.engine.label
+            engineModel:
+                label: syntetiq.modelbuild.engine_model.label
+            file:
+                label: syntetiq.modelpretrained.file.label
+                type: twig
+                template: '@SyntetiQModel/Model/Datagrid/Property/pretrained_file.html.twig'
+                frontend_type: html
+                data_name: file
+            createdAt:
+                label: oro.ui.created_at
+                frontend_type: datetime
+        properties:
+            delete_link:
+                type: url
+                route: syntetiq_model_model_pretrained_delete
+                params: [ id ]
+        actions:
+            delete:
+                acl_resource: syntetiq_model_model_edit
+                type: delete
+                label: oro.grid.action.delete
+                link: delete_link
+                icon: trash
+        sorters:
+            columns:
+                id:
+                    data_name: mp.id
+            default:
+                id: DESC

@@ -1,0 +1,17 @@
+aliases:
+    oro/datagrid/action/tag-prompt-mass-action$: syntetiqdataset/js/datagrid/action/tag-prompt-mass-action
+    oro/datagrid/action/rename-label-prompt-mass-action$: syntetiqdataset/js/datagrid/action/rename-label-prompt-mass-action
+    oro/datagrid/action/split-random-mass-action$: syntetiqdataset/js/datagrid/action/split-random-mass-action
+
+dynamic-imports:
+    commons:
+        - oro/datagrid/action/tag-prompt-mass-action
+        - oro/datagrid/action/rename-label-prompt-mass-action
+        - oro/datagrid/action/split-random-mass-action
+        - syntetiqdataset/js/app/views/editor/dataset-item-tags-editor-view
+        - syntetiqdataset/js/app/views/dataset-item-view
+        - syntetiqdataset/js/app/views/export-data-set
+        - syntetiqdataset/js/app/views/remove-items-by-tag
+        - syntetiqdataset/js/app/views/upload-archive
+        - syntetiqdataset/js/app/views/upload-images
+        - syntetiqdataset/js/svelte/editor-svelte-component

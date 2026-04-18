@@ -1,0 +1,26 @@
+services:
+    _defaults:
+        tags:
+            - { name: oro_message_queue.topic }
+
+    SyntetiQ\Bundle\ModelBundle\Async\ProcessRunner:
+        public: true
+        arguments:
+            - "@doctrine"
+
+    SyntetiQ\Bundle\ModelBundle\Async\Topic\CleanModelBuildFilesTopic: ~
+    SyntetiQ\Bundle\ModelBundle\Async\Topic\SyncModelBuildArtifactsTopic: ~
+
+    SyntetiQ\Bundle\ModelBundle\Async\CleanModelBuildFilesProcessor:
+        arguments:
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+        tags:
+            - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\ModelBundle\Async\SyncModelBuildArtifactsProcessor:
+        arguments:
+            - '@doctrine'
+            - '@oro_message_queue.job.runner'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\ModelBuildArtifactSyncer'
+        tags:
+            - { name: oro_message_queue.client.message_processor }

@@ -1,0 +1,29 @@
+name: "Pear Quality Control"
+image_size: "320_320"
+items:
+  - image: "Anjou_001.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "val"
+    tag: "defect_check"
+    objects:
+      - name: "bruise"
+        truncated: false
+        min_x: 54
+        max_x: 87
+        min_y: 65
+        max_y: 98
+  - image: "Kaiser_001.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "val"
+    tag: "defect_check"
+    objects:
+      - name: "stem_present"
+        truncated: false
+        min_x: 11
+        max_x: 33
+        min_y: 11
+        max_y: 44

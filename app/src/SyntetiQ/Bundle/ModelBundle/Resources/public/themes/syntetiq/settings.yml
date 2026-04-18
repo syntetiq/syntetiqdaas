@@ -1,0 +1,10 @@
+label: SyntetiQ Theme
+logo: bundles/syntetiqmodel/themes/syntetiq/images/logo.svg
+icon: bundles/syntetiqmodel/themes/syntetiq/images/favicon.ico
+rtl_support: true
+styles:
+    css:
+        inputs:
+            - bundles/syntetiqmodel/themes/syntetiq/css/scss/settings/primary-settings
+            - bundles/syntetiqmodel/themes/syntetiq/css/style.css
+        output: css/oro.css

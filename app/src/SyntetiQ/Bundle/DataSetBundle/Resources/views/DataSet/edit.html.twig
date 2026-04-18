@@ -1,0 +1,96 @@
+{% extends '@OroUI/actions/update.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+
+{% oro_title_set({params : {
+    '%identifier%': entity.id|default('N/A'|trans),
+    '%entityName%': 'syntetiq.dataset.entity_label'|trans
+} }) %}
+
+{% set formAction = entity.id ?
+path('syntetiq_model_data_set_edit', { 'id': entity.id }) :
+path('syntetiq_model_data_set_create') %}
+
+{% block navButtons %}
+	<div onclick="goBack()" class="pull-left btn-group icons-holder">
+		<span class=" btn back icons-holder-text">Cancel</span>
+	</div>
+
+	<script>
+		function goBack() {
+window.history.back();
+}
+	</script>
+
+	{% set html = UI.saveAndCloseButton({
+        'route': 'syntetiq_model_data_set_view',
+        'params': {'id': '$id', '_enableContentProviders': 'mainMenu'}
+    }) %}
+
+	{% if is_granted('syntetiq_model_data_set_create') %}
+		{% set html = html ~ UI.saveAndNewButton({
+            'route': 'syntetiq_model_data_set_create'
+        }) %}
+	{% endif %}
+
+	{% if entity.id or is_granted('syntetiq_model_data_set_edit') %}
+		{% set html = html ~ UI.saveAndStayButton({
+            'route': 'syntetiq_model_data_set_edit',
+            'params': {'id': '$id', '_enableContentProviders': 'mainMenu'}
+        }) %}
+	{% endif %}
+
+	{{ UI.dropdownSaveButton({'html': html}) }}
+{% endblock navButtons %}
+
+{% block pageHeader %}
+	{% if entity.id %}
+		{% set breadcrumbs = {
+            'entity': entity,
+            'indexPath': path('syntetiq_model_data_set_index'),
+            'indexLabel': 'syntetiq.dataset.entity_plural_label'|trans,
+            'entityTitle': entity.id|default('N/A'|trans)
+        } %}
+
+		{{ parent() }}
+	{% else %}
+		{% set title = 'oro.ui.create_entity'|trans({'%entityName%': 'syntetiq.dataset.entity_label'|trans}) %}
+		{% include '@OroUI/page_title_block.html.twig' with { title: title } %}
+	{% endif %}
+{% endblock pageHeader %}
+
+{% block content_data %}
+	{% set id = 'data-set-edit' %}
+
+	{#    {% set translateBlock %}#}
+	{#        <div class="form-edit-attributes">#}
+	{#            {{ form_widget(form.translations) }}#}
+	{#        </div>#}
+	{#    {% endset %}#}
+
+	{% set generalBlock %}
+		<div class="responsive-cell"> {{ form_row(form.name) }}
+	</div>
+	<div class="responsive-cell">
+		{{ form_widget(form) }}
+	</div>
+	{% endset %}
+
+	{% set dataBlocks = [] %}
+	{% set dataBlocks = dataBlocks|merge([{
+        'title': 'syntetiq.model.sections.general'|trans,
+        'class': 'active',
+        'subblocks': [{'data': [generalBlock]}]
+    }]) %}
+
+	{#    {% set dataBlocks = dataBlocks|merge([{#}
+	{#        'title': 'syntetiq.sections.translation'|trans,#}
+	{#        'subblocks': [{'data' : [translateBlock]}]#}
+	{#    }]) %}#}
+
+	{% set data = {
+        'formErrors': form_errors(form),
+        'dataBlocks': dataBlocks
+    } %}
+
+{{ parent() }}{% endblock content_data %}

@@ -1,0 +1,29 @@
+services:
+    _defaults:
+        public: false
+
+    SyntetiQ\Bundle\ModelBundle\Command\BuildRunnerCommand:
+        arguments:
+            - '@doctrine'
+            - '@oro_attachment.file_manager'
+            - '@sq.file_manager.model_files'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\DatasetBuilder'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\ModelBuildQaInputPreparer'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+            - '@SyntetiQ\Bundle\ModelBundle\Provider\ModelBuildArtifactSyncMessageSender'
+        calls:
+            - [ setLogger, ['@logger'] ]
+        tags:
+            - { name: console.command, command: 'oro:cron:syntetiq-build-runner' }
+
+    SyntetiQ\Bundle\ModelBundle\Command\CleanupGcsAttachmentFilesCommand:
+        arguments:
+            - '%oro_attachment.collect_attachment_files_batch_size%'
+            - '%oro_attachment.load_attachments_batch_size%'
+            - '%oro_attachment.load_existing_attachments_batch_size%'
+            - '@sq.file_manager.attachments_cleanup_data'
+            - '@doctrine'
+            - '@oro_attachment.file_manager'
+            - '@gaufrette.attachments_filesystem'
+        tags:
+            - { name: console.command, command: 'syntetiq:attachment:cleanup' }

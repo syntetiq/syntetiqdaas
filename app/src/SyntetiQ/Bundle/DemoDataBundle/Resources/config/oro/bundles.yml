@@ -1,0 +1,2 @@
+bundles:
+    - { name: SyntetiQ\Bundle\DemoDataBundle\SyntetiQDemoDataBundle, priority: 200 }

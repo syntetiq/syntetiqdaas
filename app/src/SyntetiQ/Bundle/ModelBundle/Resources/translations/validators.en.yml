@@ -1,0 +1,5 @@
+syntetiq:
+    modelbuild:
+        validation:
+            dataset_split_groups: 'Dataset must contain at least one annotated image{{ selection }} in each split group: train, val, and test. Missing groups: {{ missing_groups }}. Images without a group are assigned randomly and are not counted.'
+            pretrained_model_compatible: 'Uploaded pretrained model must belong to the same model, engine, and model type.'

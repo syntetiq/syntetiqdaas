@@ -1,0 +1,42 @@
+services:
+    SyntetiQ\Bundle\DataSetBundle\Form\Type\DataSetType:
+        tags:
+            - { name: form.type, alias: syntetiq_model_type_data_set }
+
+    SyntetiQ\Bundle\DataSetBundle\Form\Type\DataSetItemType:
+        arguments:
+            - '@oro_config.global'
+        tags:
+            - { name: form.type, alias: syntetiq_model_type_data_set_item }
+
+    SyntetiQ\Bundle\DataSetBundle\Form\Handler\DataSetItemHandler:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemImageManager'
+
+    SyntetiQ\Bundle\DataSetBundle\Form\Type\ItemObjectConfigurationRowType:
+        tags:
+            - { name: form.type, alias: asc_item_object_configuration_row }
+
+    SyntetiQ\Bundle\DataSetBundle\Form\Type\ItemObjectConfigurationRowCollectionType:
+        tags:
+            - { name: form.type, alias: asc_item_object_configuration_row_collection }
+
+    SyntetiQ\Bundle\DataSetBundle\Form\Type\WidgetDataSetSelectType:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@oro_form.autocomplete.search_registry'
+            - '@oro_entity_config.provider.form'
+            - '@oro_entity.doctrine_helper'
+        tags:
+            - { name: form.type, alias: 'oro_type_widget_data_set_select' }
+
+    SyntetiQ\Bundle\DataSetBundle\Form\Type\DataSetSelectType:
+        arguments:
+            - '@security.authorization_checker'
+            - '@oro_featuretoggle.checker.feature_checker'
+            - '@oro_entity_config.config_manager'
+            - '@doctrine.orm.entity_manager'
+            - '@oro_form.autocomplete.search_registry'
+        tags:
+            - { name: form.type, alias: syntetiq_data_set_select }

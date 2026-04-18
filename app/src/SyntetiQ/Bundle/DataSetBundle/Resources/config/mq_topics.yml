@@ -1,0 +1,93 @@
+services:
+    _defaults:
+        tags:
+            - { name: oro_message_queue.topic }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\ExportDataSetTopic: ~
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\ImportDataSetTopic: ~
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\ImportDataSetBatchTopic: ~
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\ImportDataSetFinalizeTopic: ~
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\DataSetQaTopic: ~
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\RemoveDataSetItemsTopic: ~
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\RemoveDataSetItemsBatchTopic: ~
+    SyntetiQ\Bundle\DataSetBundle\Async\Topic\ImportDataSetRollbackTopic: ~
+
+    SyntetiQ\Bundle\DataSetBundle\Async\RemoveDataSetItemsProcessor:
+        arguments:
+            - '@doctrine'
+            - '@oro_message_queue.job.runner'
+            - '@oro_message_queue.client.message_producer'
+        tags:
+            - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\RemoveDataSetItemsBatchProcessor:
+        arguments:
+            - '@doctrine'
+            - '@oro_message_queue.job.runner'
+            - '@sq.google_cloud_storage.client'
+            - '%env(GCS_BUCKET_NAME)%'
+            - 'data/attachments'
+        tags:
+            - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\ExportDataSetProcessor:
+            arguments:
+                - '@doctrine'
+                - '@oro_message_queue.job.runner'
+                - '@oro_attachment.file_manager'
+                - '@sq.file_manager.import_export'
+                - '@syntetiq.serializer.process.serializer'
+                - '@liip_imagine'
+                - '@oro_attachment.manager.image_resize'
+                - '@SyntetiQ\Bundle\ModelBundle\Provider\ArchiveProvider'
+                - '@oro_notification.manager.email_notification'
+                - '@oro_attachment.provider.file_url'
+                - '@SyntetiQ\Bundle\DataSetBundle\Service\YoloDatasetMaterializer'
+            tags:
+                - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\ImportDataSetProcessor:
+        arguments:
+            - '@oro_message_queue.job.runner'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\ImportDataSetArtifactsManager'
+            - '@doctrine'
+            - '@oro_message_queue.client.message_producer'
+        tags:
+            - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\ImportDataSetBatchProcessor:
+        arguments:
+            - '@oro_message_queue.job.runner'
+            - '@doctrine'
+            - '@oro_attachment.file_manager'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\DataSetItemImageManager'
+        tags:
+            - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\ImportDataSetFinalizeProcessor:
+        arguments:
+            - '@oro_message_queue.job.runner'
+            - '@doctrine'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\ImportDataSetArtifactsManager'
+            - '@oro_message_queue.client.message_producer'
+            - '@logger'
+        tags:
+            - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\ImportDataSetRollbackProcessor:
+        arguments:
+            - '@doctrine'
+            - '@oro_message_queue.job.runner'
+            - '@oro_message_queue.client.message_producer'
+        tags:
+            - { name: oro_message_queue.client.message_processor }
+
+    SyntetiQ\Bundle\DataSetBundle\Async\DataSetQaProcessor:
+        arguments:
+            - '@doctrine'
+            - '@oro_message_queue.job.runner'
+            - '@SyntetiQ\Bundle\DataSetBundle\Service\YoloDatasetMaterializer'
+            - '@sq.file_manager.import_export'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+        tags:
+            - { name: oro_message_queue.client.message_processor }

@@ -1,0 +1,8 @@
+syntetiq_generate_images_request:
+    resource: "@SyntetiQOmniverseBundle/Controller/RequestController.php"
+    type: attribute
+    prefix: /generate-images-request
+
+syntetiq_omniverse_api_callback:
+    resource: "@SyntetiQOmniverseBundle/Controller/Api/CallbackController.php"
+    type: attribute

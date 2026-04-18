@@ -1,0 +1,91 @@
+{% extends '@OroUI/actions/view.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+{% import '@OroDataGrid/macros.html.twig' as dataGrid %}
+
+{% block pageHeader %}
+    {% set breadcrumbs = {
+        'entity': entity,
+        'indexPath': path('syntetiq_model_data_set_index'),
+        'indexLabel': 'syntetiq.dataset.page.title.label'|trans,
+        'additional': [{
+            'indexPath': path('syntetiq_model_data_set_view', { id: entity.id }),
+            'indexLabel': entity.name
+        }],
+        'entityTitle': 'syntetiq.dataset.button.items.label'|trans
+    } %}
+
+    {{ parent() }}
+{% endblock pageHeader %}
+
+{% block navButtons %}
+    <div class="btn-group">
+        <div id="upload-images-button" class="btn main-group btn-primary pull-right icons-holder-text"
+                {{ UI.renderPageComponentAttributes({
+                    view: 'syntetiqdataset/js/app/views/upload-images',
+                    options: {
+                        dataSet: entity.id
+                    }
+                }) }}>
+            <span class="fa-image hide-text" aria-hidden="true"></span>
+            {{ 'syntetiq.dataset.button.upload.label'|trans }}
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <div id="upload-archive-button" class="btn main-group btn-primary pull-right icons-holder-text"
+                {{ UI.renderPageComponentAttributes({
+                    view: 'syntetiqdataset/js/app/views/upload-archive',
+                    options: {
+                        dataSet: entity.id
+                    }
+                }) }}>
+            <span class="fa-upload hide-text" aria-hidden="true"></span>
+            {{ 'syntetiq.dataset.button.import.label'|trans }}
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <div id="export-data-set-button" class="btn main-group btn-danger pull-right icons-holder-text"
+                {{ UI.renderPageComponentAttributes({
+                    view: 'syntetiqdataset/js/app/views/export-data-set',
+                    options: {
+                        dataSet: entity.id,
+                        exportTags: exportTagOptions,
+                        queueUrl: path('syntetiq_model_data_set_export_queue', { id: entity.id })
+                    }
+                }) }}>
+            <span class="fa-download hide-text" aria-hidden="true"></span>
+            {{ 'syntetiq.dataset.button.export.label'|trans }}
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <div id="remove-items-by-tag-button" class="btn main-group btn-danger pull-right icons-holder-text"
+                {{ UI.renderPageComponentAttributes({
+                    view: 'syntetiqdataset/js/app/views/remove-items-by-tag',
+                    options: {
+                        dataSet: entity.id,
+                        exportTags: exportTagOptions,
+                        queueUrl: path('syntetiq_model_data_set_item_remove_by_tag', { dataSetId: entity.id })
+                    }
+                }) }}>
+            <span class="fa-trash hide-text" aria-hidden="true"></span>
+            Remove Items by Tag
+        </div>
+    </div>
+
+    <div class="btn-group">
+        {{ UI.button({
+            'path': path('syntetiq_model_data_set_gallery', { id: entity.id }),
+            'title': 'syntetiq.dataset.button.gallery.label'|trans,
+            'label': 'syntetiq.dataset.button.gallery.label'|trans,
+            'iCss': 'fa-th-large'
+        }) }}
+    </div>
+{% endblock navButtons %}
+
+{% block content_data %}
+    {{ dataGrid.renderGrid('syntetiq-model-data-set-items-grid', {dataSetId: entity.id}, {
+        cssClass: 'sq-data-set-items-grid'
+    }) }}
+{% endblock content_data %}

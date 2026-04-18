@@ -1,0 +1,4 @@
+acl_categories:
+    sq_entities:
+        label: syntetiq.setup.acl.category.sq_entities.label
+        tab: true

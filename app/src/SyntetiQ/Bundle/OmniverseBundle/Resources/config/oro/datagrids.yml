@@ -1,0 +1,79 @@
+datagrids:
+    syntetiq-generate-images-request-grid:
+        source:
+            type: orm
+            query:
+                select:
+                    - request.id
+                    - request.frames
+                    - request.width
+                    - request.height
+                    - integration.name as integrationName
+                    - request.status
+                    - request.sentAt
+                    - request.handledAt
+                    - request.response
+                    - request.createdAt
+                    - request.updatedAt
+                from:
+                    - { table: SyntetiQ\Bundle\OmniverseBundle\Entity\GenerateImagesRequest, alias: request }
+                join:
+                    left:
+                        - { join: request.integration, alias: integration }
+        columns:
+            id:
+                label: 'ID'
+            integrationName:
+                label: 'syntetiq.omniverse.generateimagesrequest.integration.label'
+            status:
+                label: 'syntetiq.omniverse.generateimagesrequest.status.label'
+            sentAt:
+                label: 'syntetiq.omniverse.generateimagesrequest.sent_at.label'
+                frontend_type: datetime
+            handledAt:
+                label: 'syntetiq.omniverse.generateimagesrequest.handled_at.label'
+                frontend_type: datetime
+            labelName:
+                label: 'Label Name'
+            frames:
+                label: 'syntetiq.omniverse.generateimagesrequest.frames.label'
+            width:
+                label: 'syntetiq.omniverse.generateimagesrequest.width.label'
+            height:
+                label: 'syntetiq.omniverse.generateimagesrequest.height.label'
+            createdAt:
+                label: 'oro.ui.created_at'
+                frontend_type: datetime
+            updatedAt:
+                label: 'oro.ui.updated_at'
+                frontend_type: datetime
+            response:
+                label: 'syntetiq.omniverse.generateimagesrequest.response.label'
+        sorters:
+             columns:
+                 id:
+                     data_name: request.id
+                 createdAt:
+                     data_name: request.createdAt
+                 updatedAt:
+                     data_name: request.updatedAt
+             default:
+                 createdAt: DESC
+        filters:
+             columns:
+                 frames:
+                     type: number
+                     data_name: request.frames
+                 createdAt:
+                     type: datetime
+                     data_name: request.createdAt
+
+    syntetiq-generate-images-request-by-dataset-grid:
+        extends: syntetiq-generate-images-request-grid
+        source:
+            query:
+                where:
+                    and:
+                        - request.dataSet = :dataSetId
+            bind_parameters:
+                dataSetId: dataSetId

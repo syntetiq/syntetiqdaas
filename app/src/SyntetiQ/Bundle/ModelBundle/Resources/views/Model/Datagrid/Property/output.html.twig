@@ -1,0 +1,4 @@
+{{- record.getValue('output')[0:64]|striptags|nl2br -}}
+{% if record.getValue('output')|length > 64 %}
+...
+{% endif %}

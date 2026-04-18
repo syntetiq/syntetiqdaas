@@ -1,0 +1,113 @@
+{% extends '@OroUI/actions/view.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+{% import '@OroDataGrid/macros.html.twig' as dataGrid %}
+
+{% block pageHeader %}
+    {% set breadcrumbs = {
+        'entity': entity,
+        'indexPath': path('syntetiq_model_model_index'),
+        'indexLabel': 'syntetiq.model.page.title.label'|trans,
+        'entityTitle': entity.name|default('N/A'|trans)
+    } %}
+
+    {{ parent() }}
+{% endblock pageHeader %}
+
+{% block navButtons %}
+    {% if is_granted('EDIT', entity) %}
+        <div class="btn-group">
+            <div id="upload-pretrained-model-button" class="btn main-group btn-primary pull-right icons-holder-text"
+                {{ UI.renderPageComponentAttributes({
+                    view: 'syntetiqmodel/js/app/views/model-pretrained-upload',
+                    options: {
+                        modelId: entity.id,
+                        engines: engines
+                    }
+                }) }}>
+                <span class="fa-upload hide-text" aria-hidden="true"></span>
+                {{ 'syntetiq.model.button.model.upload_pretrained.label'|trans }}
+            </div>
+        </div>
+    {% endif %}
+
+    {{ UI.editButton({
+        'path' : path('syntetiq_model_model_build_create', { 'modelId': entity.id }),
+        'title': 'Create Build',
+        'label':'Create Build'|trans,
+        'iCss': 'fa-check',
+        'aCss': 'btn-danger icons-holder-text'
+    }) }}
+
+
+    {% if is_granted('EDIT', entity) %}
+        {{ UI.editButton({
+            'path' : path('syntetiq_model_model_edit', { 'id': entity.id }),
+            'title': 'Add Entity',
+            'label':'syntetiq.model.button.model.edit.label'|trans
+        }) }}
+	{% endif %}
+
+	{{ parent() }}
+{% endblock %}
+
+{% block content_data %}
+    {% set generalInfo %}
+        {# {% set resourceData %}
+            {% if entity.resource %}
+                {{ oro_file_view(entity.resource) }}
+            {% else %}
+                N/A
+            {% endif %}
+        {% endset %} #}
+
+        {{ UI.renderHtmlProperty('syntetiq.model.name.label'|trans, entity.name) }}
+        {{ UI.renderHtmlProperty('syntetiq.model.description.label'|trans, entity.description) }}
+        {# {{ UI.renderHtmlProperty('syntetiq.model.resource.label'|trans, resourceData) }} #}
+
+        {% if entity.dataSet %}
+            {{ UI.renderHtmlProperty('syntetiq.model.data_set.label'|trans,
+                UI.entityViewLink(entity.dataSet, entity.dataSet.name, 'syntetiq_model_data_set_view'))
+            }}
+        {% else %}
+            {{ UI.renderHtmlProperty('syntetiq.model.data_set.label'|trans,
+                'N/A')
+            }}
+        {% endif %}
+
+    {% endset %}
+
+    {% set buildInfo %}
+        <div class="widget-content">
+            {{ dataGrid.renderGrid('syntetiq-model-build-grid', { modelId: entity.id }) }}
+        </div>
+    {% endset %}
+
+    {% set pretrainedInfo %}
+        <div class="widget-content">
+            {{ dataGrid.renderGrid('syntetiq-model-pretrained-grid', { modelId: entity.id }) }}
+        </div>
+    {% endset %}
+
+    {% set dataBlocks = [] %}
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'syntetiq.model.sections.general'|trans,
+        'subblocks': [{'data' : [generalInfo]}]
+    }]) %}
+
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'syntetiq.model.sections.build'|trans,
+        'subblocks': [{'data' : [buildInfo]}]
+    }]) %}
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'syntetiq.model.sections.pretrained'|trans,
+        'subblocks': [{'data' : [pretrainedInfo]}]
+    }]) %}
+
+    {% set id = 'model-view' %}
+    {% set data = {'dataBlocks': dataBlocks} %}
+
+    {{ parent() }}
+{% endblock content_data %}

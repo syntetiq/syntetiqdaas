@@ -1,0 +1,53 @@
+@import "tailwindcss";
+@source "./";
+@source "../index.html";
+.sq-dataset-item-edit-page .section-content {
+    padding-bottom: 0;
+}
+
+.sq-dataset-item-edit-page .responsive-cell.dataset-item-edit-cell {
+    padding-top: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    padding-left: 0 !important;
+    margin: 0 !important;
+}
+
+.sq-dataset-item-edit-page .dataset-item-editor-shell .svelte-container {
+    width: 100%;
+}
+
+.sq-dataset-item-edit-page .dataset-item-form-panel {
+    display: none;
+}
+
+.sq-dataset-item-edit-page .dataset-item-form-panel .input-widget-file {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.sq-dataset-item-edit-page .dataset-item-form-panel .input-widget-file .filename {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.sq-svelte-image-editor .canvas-stage {
+    position: relative;
+    overflow: visible;
+}
+
+.sq-svelte-image-editor .annotation-marker {
+    position: absolute;
+    border-width: 2px;
+    display: block;
+    pointer-events: auto;
+}
+
+.sq-svelte-image-editor .resize-handle {
+    pointer-events: auto;
+    background-color: #fff;
+    border: 2px solid #2563eb;
+    border-radius: 9999px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}

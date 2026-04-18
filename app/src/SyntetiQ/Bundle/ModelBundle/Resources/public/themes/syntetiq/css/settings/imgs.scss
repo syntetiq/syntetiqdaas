@@ -1,0 +1,10 @@
+/* @theme: admin.syntetiq; */
+
+$app-logo-background: url('/bundles/syntetiqmodel/themes/syntetiq/images/logo-icon.svg') no-repeat center center !default;
+
+.desktop-version .app-logo {
+  display: inline-block;
+  text-indent: -9999px;
+  background: $app-logo-background;
+  background-size: contain;
+}

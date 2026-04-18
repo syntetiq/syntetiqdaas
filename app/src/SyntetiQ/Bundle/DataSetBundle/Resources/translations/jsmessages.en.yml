@@ -1,0 +1,110 @@
+oro:
+    ui:
+        cancel: Cancel
+        error:
+            performing: "There was an error performing the requested operation. Please try again or contact us for assistance."
+        yes: Yes
+
+syntetiq:
+    dataset:
+        datasetitem:
+            entity_grid_all_view_label: All Data Set Items
+            id.label: Id
+            image.label: Image
+            group.label: Group
+            img_height.label: Image Height
+            img_width.label: Image Width
+            ready.label: Ready
+            source_type.label: Source Type
+            grid:
+                image_mini.label: Image Mini
+                image_nano.label: Image Nano
+                objects.label: Objects
+                file_name.label: File Name
+                tags.label: Tags
+                modified_at.label: Modified At
+                bbox_area.label: BBox Area
+            filter:
+                label.label: Label
+            group_option:
+                train: Train
+                validation: Validation
+                test: Test
+            source_type_option:
+                manual: Manual
+                omniverse: Omniverse
+            mass_action:
+                mark_ready:
+                    label: Mark Ready
+                    confirm_title: Mark Ready
+                    confirm_content: Are you sure you want to mark selected items ready?
+                    success: Selected items marked ready.
+                    error: Selected items were not updated.
+                mark_not_ready:
+                    label: Mark Not Ready
+                    confirm_title: Mark Not Ready
+                    confirm_content: Are you sure you want to mark selected items not ready?
+                    success: Selected items marked not ready.
+                    error: Selected items were not updated.
+                reset_labels:
+                    label: Reset Labels
+                    confirm_title: Reset Labels
+                    confirm_content: Are you sure you want to reset labels for selected items?
+                    success: Selected item labels reset.
+                    error: Selected item labels were not updated.
+                add_tag:
+                    label: Add Tag
+                    confirm_title: Add Tag
+                    confirm_content: Enter a tag to add to selected items.
+                    confirm_input_label: Tag
+                    confirm_input_placeholder: Enter tag
+                    confirm_validation_error: Tag is required.
+                    confirm_ok: Add Tag
+                    success: Tag added to selected items.
+                    error: Tag was not added.
+                remove_tag:
+                    label: Remove Tag
+                    confirm_title: Remove Tag
+                    confirm_content: Enter a tag to remove from selected items.
+                    confirm_input_label: Tag
+                    confirm_input_placeholder: Enter tag
+                    confirm_validation_error: Tag is required.
+                    confirm_ok: Remove Tag
+                    success: Tag removed from selected items.
+                    error: Tag was not removed.
+                rename_label:
+                    label: Rename Label
+                    confirm_title: Rename Label
+                    confirm_content: Enter the current label and the new label to apply to selected items.
+                    confirm_old_input_label: Current Label
+                    confirm_old_input_placeholder: Enter current label
+                    confirm_new_input_label: New Label
+                    confirm_new_input_placeholder: Enter new label
+                    confirm_old_validation_error: Current label is required.
+                    confirm_new_validation_error: New label is required.
+                    confirm_same_value_error: New label must differ from current label.
+                    confirm_ok: Rename Label
+                    success: Label renamed on selected items.
+                    error: Label was not renamed.
+                random_split:
+                    label: Random Split
+                    confirm_title: Random Split
+                    confirm_content: Set train, validation, and test percentages for the selected items. The total must be 100%.
+                    confirm_input_suffix: '%'
+                    confirm_total_label: Total
+                    confirm_validation_error: Train, validation, and test percentages must be whole numbers from 0 to 100 and total 100.
+                    confirm_ok: Apply Split
+                    success: Split groups assigned to selected items.
+                    error: Split groups were not assigned.
+            row_action:
+                mark_ready:
+                    success: Item marked ready.
+                    error: Item was not updated.
+                mark_not_ready:
+                    success: Item marked not ready.
+                    error: Item was not updated.
+                reset_labels:
+                    confirm_title: Reset Labels
+                    confirm_content: Are you sure you want to reset labels for this item?
+                    success: Item labels reset.
+                    error: Item labels were not updated.

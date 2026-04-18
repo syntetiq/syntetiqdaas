@@ -1,0 +1,4 @@
+{{- record.getValue('error_output')[-64:]|nl2br -}}
+{% if record.getValue('error_output')|length > 64 %}
+...
+{% endif %}

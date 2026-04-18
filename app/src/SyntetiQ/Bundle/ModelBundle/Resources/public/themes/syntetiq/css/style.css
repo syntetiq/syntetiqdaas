@@ -1,0 +1,8 @@
+/** Theme styles */
+
+.desktop-version .app-logo {
+    background: url(/bundles/syntetiqmodel/themes/syntetiq/images/logo-icon.svg) no-repeat 50%;
+    background-size: contain;
+    display: inline-block;
+    text-indent: -9999px
+}

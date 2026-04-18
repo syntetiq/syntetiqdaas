@@ -1,0 +1,48 @@
+acls:
+    syntetiq_model_data_set_view:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSet
+        permission: VIEW
+        group_name: ""
+
+    syntetiq_model_data_set_edit:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSet
+        permission: EDIT
+        group_name: ""
+    
+    syntetiq_model_data_set_create:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSet
+        permission: CREATE
+        group_name: ""
+
+    syntetiq_model_data_set_delete:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSet
+        permission: DELETE
+        group_name: ""
+
+    syntetiq_model_data_set_item_view:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem
+        permission: VIEW
+        group_name: ""
+
+    syntetiq_model_data_set_item_edit:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem
+        permission: EDIT
+        group_name: ""
+
+    syntetiq_model_data_set_item_create:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem
+        permission: CREATE
+        group_name: ""
+
+    syntetiq_model_data_set_item_delete:
+        type: entity
+        class: SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem
+        permission: DELETE
+        group_name: ""

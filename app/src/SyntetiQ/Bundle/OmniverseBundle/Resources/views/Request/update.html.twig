@@ -1,0 +1,234 @@
+{% extends '@OroUI/actions/update.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+{% oro_title_set({params : {
+    '%identifier%': entity.id|default('N/A'|trans),
+    '%entityName%': 'syntetiq.omniverse.generateimagesrequest.entity_label'|trans
+} }) %}
+
+{% set formAction = entity.id ?
+    path('syntetiq_generate_images_request_update', { 'id': entity.id }) :
+    path('syntetiq_generate_images_request_create', {dataSetId : entity.dataSet.id}) %}
+
+{% block navButtons %}
+	<div onclick="goBack()" class="pull-left btn-group icons-holder">
+		<span class=" btn back icons-holder-text">Cancel</span>
+	</div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+    {% set html = UI.saveAndCloseButton({
+        'route': 'syntetiq_model_data_set_view',
+        'params': {'id': entity.dataSet.id, '_enableContentProviders': 'mainMenu'}
+    }) %}
+
+    {% if entity.id or is_granted('syntetiq_generate_images_request_edit') %}
+        {% set html = html ~ UI.saveAndStayButton({
+            'route': 'syntetiq_generate_images_request_update',
+            'params': {'id': '$id', '_enableContentProviders': 'mainMenu'}
+        }) %}
+    {% endif %}
+
+	{{ UI.dropdownSaveButton({'html': html}) }}
+
+	{{ parent() }}
+{% endblock navButtons %}
+
+{% block pageHeader %}
+    {% if entity.id %}
+        {% set title = 'oro.ui.create_entity'|trans({'%entityName%': 'syntetiq.omniverse.generateimagesrequest.entity_label'|trans}) %}
+
+        {% set breadcrumbs = {
+            'entity': entity.dataSet,
+            'indexPath': path('syntetiq_model_data_set_items', {id: entity.dataSet.id}),
+            'indexLabel': 'syntetiq.dataset.entity_label'|trans ~ ': ' ~ entity.dataSet.name,
+            'entityTitle': title
+        } %}
+
+        {{ parent() }}
+    {% else %}
+        {% set title = 'oro.ui.create_entity'|trans({'%entityName%': 'syntetiq.omniverse.generateimagesrequest.entity_label'|trans}) %}
+
+        {% set breadcrumbs = {
+            'entity': entity.dataSet,
+            'indexPath': path('syntetiq_model_data_set_items', {id: entity.dataSet.id}),
+            'indexLabel': 'syntetiq.dataset.entity_label'|trans ~ ': ' ~ entity.dataSet.name,
+            'entityTitle': title
+        } %}
+
+        {{ parent() }}
+    {% endif %}
+{% endblock pageHeader %}
+
+{% block content_data %}
+    {% set id = 'omniverse-generate-images-request-edit' %}
+
+    {% set generalBlock %}
+        <style>
+            .omniverse-vector-group {
+                margin-bottom: 16px;
+                padding: 18px 20px 8px;
+                border: 1px solid #dfe3e8;
+                border-radius: 8px;
+            }
+
+            .omniverse-vector-group--odd {
+                background: #f7f9fc;
+            }
+
+            .omniverse-vector-group--even {
+                background: #fcfcfd;
+            }
+
+            .omniverse-vector-group .control-group:last-child {
+                margin-bottom: 0;
+            }
+
+            .omniverse-scene-input::-webkit-calendar-picker-indicator {
+                display: none !important;
+                -webkit-appearance: none;
+            }
+
+            .omniverse-labels-input {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                align-items: center;
+                min-height: 32px;
+                width: 294px;
+                max-width: 294px;
+                padding: 0 12px;
+                border: 1px solid #98a6bd;
+                border-radius: 4px;
+                background: #fff;
+                cursor: text;
+                transition: border-color .15s ease, box-shadow .15s ease;
+                box-sizing: border-box;
+            }
+
+            .omniverse-labels-input:focus-within {
+                border-color: #66afe9;
+                box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
+            }
+
+            .omniverse-labels-input__list {
+                display: inline-flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .omniverse-labels-input__tag {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 3px 7px;
+                border: 1px solid #d9d9d9;
+                border-radius: 3px;
+                background: #f5f5f5;
+                color: #333;
+                font-size: 14px;
+                line-height: 1;
+            }
+
+            .omniverse-labels-input__remove {
+                border: 0;
+                background: transparent;
+                padding: 0;
+                color: #666;
+                font-size: 14px;
+                line-height: 1;
+                cursor: pointer;
+            }
+
+            .omniverse-labels-input__field {
+                flex: 1 1 0;
+                min-width: 0;
+                height: 30px !important;
+                line-height: 30px;
+                border: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                outline: none !important;
+                background: transparent;
+                margin: 0;
+                font-size: 14px;
+                min-height: 0;
+                width: 100%;
+            }
+
+            .omniverse-labels-input__field:focus,
+            .omniverse-labels-input__field:hover,
+            .omniverse-labels-input__field:active {
+                border: 0 !important;
+                box-shadow: none !important;
+                outline: none !important;
+            }
+        </style>
+
+        <div class="responsive-cell">
+            {{ form_row(form.integration) }}
+            {{ form_row(form.scene) }}
+            <datalist id="syntetiq-generate-images-request-scene-options">
+                {% for sceneOption in form.vars.scene_options %}
+                    <option value="{{ sceneOption }}"></option>
+                {% endfor %}
+            </datalist>
+            {{ form_row(form.frames) }}
+            {{ form_row(form.focalLength) }}
+            {{ form_row(form.width) }}
+            {{ form_row(form.height) }}
+            {{ form_row(form.labelName) }}
+            {{ form_row(form.spawnCube) }}
+            {{ form_row(form.cubeSize) }}
+            {{ form_row(form.tmpRoot) }}
+            {{ form_row(form.convertImagesToJpeg) }}
+            {{ form_row(form.jpegQuality) }}
+            {{ form_row(form.cleanupAfterZip) }}
+            <div {{ UI.renderPageComponentAttributes({
+                view: 'syntetiqomniverse/js/app/views/include-labels-input-view',
+                options: {
+                    fieldSelector: '#' ~ form.includeLabelsText.vars.id
+                }
+            }) }}>
+                {{ form_row(form.includeLabelsText) }}
+            </div>
+        </div>
+        <div class="responsive-cell">
+            <div class="omniverse-vector-group omniverse-vector-group--odd">
+                {{ form_row(form.cameraPos) }}
+            </div>
+            <div class="omniverse-vector-group omniverse-vector-group--even">
+                {{ form_row(form.cameraPosEnd) }}
+            </div>
+            <div class="omniverse-vector-group omniverse-vector-group--odd">
+                {{ form_row(form.cameraRotation) }}
+            </div>
+            <div class="omniverse-vector-group omniverse-vector-group--even">
+                {{ form_row(form.cubeTranslate) }}
+            </div>
+            <div class="omniverse-vector-group omniverse-vector-group--odd">
+                {{ form_row(form.cubeScale) }}
+            </div>
+        </div>
+
+        {{ form_rest(form) }}
+    {% endset %}
+
+    {% set dataBlocks = [] %}
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'syntetiq.omniverse.generateimagesrequest.sections.general'|trans,
+        'class': 'active',
+        'subblocks': [{'data': [generalBlock]}]
+    }]) %}
+
+    {% set data = {
+        'formErrors': form_errors(form),
+        'dataBlocks': dataBlocks
+    } %}
+
+    {{ parent() }}
+{% endblock content_data %}

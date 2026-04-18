@@ -1,0 +1,21 @@
+operations:
+    syntetiq_model_recalculate_data_set_qa:
+        label: Recalculate QA
+        page_reload: true
+        acl_resource: syntetiq_model_data_set_view
+        enabled: true
+        routes:
+            - syntetiq_model_data_set_view
+        order: 5
+        button_options:
+            icon: fa-refresh
+            class: btn-primary icons-holder-text
+        actions:
+            -   '@call_service_method':
+                    service: SyntetiQ\Bundle\DataSetBundle\Provider\DataSetQaProvider
+                    method: sendMessage
+                    method_parameters:
+                        dataSet: $.data
+            -   '@flash_message':
+                    message: Dataset QA has been queued.
+                    type: success

@@ -1,0 +1,14 @@
+syntetiq_model_bundle:
+    resource: "@SyntetiQModelBundle/Controller"
+    type: attribute
+    prefix: /
+
+syntetiq_model_model:
+    resource: "@SyntetiQModelBundle/Controller/ModelController.php"
+    type: attribute
+    prefix: /model
+
+syntetiq_model_model_build:
+    resource: "@SyntetiQModelBundle/Controller/ModelBuildController.php"
+    type: attribute
+    prefix: /model-build

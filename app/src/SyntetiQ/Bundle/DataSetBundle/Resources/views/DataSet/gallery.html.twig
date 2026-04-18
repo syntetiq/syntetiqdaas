@@ -1,0 +1,48 @@
+{% extends '@OroUI/actions/view.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+{% block pageHeader %}
+    {% set breadcrumbs = {
+        'entity': entity,
+        'indexPath': path('syntetiq_model_data_set_index'),
+        'indexLabel': 'syntetiq.dataset.page.title.label'|trans,
+        'additional': [{
+            'indexPath': path('syntetiq_model_data_set_view', { id: entity.id }),
+            'indexLabel': entity.name
+        }],
+        'entityTitle': 'syntetiq.dataset.button.gallery.label'|trans
+    } %}
+
+    {{ parent() }}
+{% endblock pageHeader %}
+
+{% block navButtons %}
+    <div class="btn-group">
+        <div id="upload-images-button" class="btn main-group btn-primary pull-right icons-holder-text"
+                {{ UI.renderPageComponentAttributes({
+                    view: 'syntetiqdataset/js/app/views/upload-images',
+                    options: {
+                        dataSet: entity.id
+                    }
+                }) }}>
+            <span class="fa-image hide-text" aria-hidden="true"></span>
+            {{ 'syntetiq.dataset.button.upload.label'|trans }}
+        </div>
+    </div>
+
+    <div class="btn-group">
+        {{ UI.button({
+            'path': path('syntetiq_model_data_set_items', { id: entity.id }),
+            'title': 'syntetiq.dataset.button.items.label'|trans,
+            'label': 'syntetiq.dataset.button.items.label'|trans,
+            'iCss': 'fa-table'
+        }) }}
+    </div>
+{% endblock navButtons %}
+
+{% block content_data %}
+    {% include '@SyntetiQDataSet/DataSetItem/gallery.html.twig' with {
+        items: items,
+        pagination: galleryPagination
+    } %}
+{% endblock content_data %}

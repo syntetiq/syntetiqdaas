@@ -1,0 +1,21 @@
+operations:
+    syntetiq_omniverse_request_genarate_images:
+        label: syntetiq.omniverse.actions.genarate_images.label
+        enabled: true
+        routes:
+            - syntetiq_model_data_set_view
+        order: 5
+        button_options:
+            icon: fa-image
+            class: btn icons-holder-text
+
+        preconditions:
+            '@syntetiq_omniverse_is_active': ~
+
+        actions:
+            - '@redirect':
+                parameters:
+                    route: syntetiq_generate_images_request_create
+                    route_parameters:
+                        dataSetId: $id
+                        integrationId: $.integrationId

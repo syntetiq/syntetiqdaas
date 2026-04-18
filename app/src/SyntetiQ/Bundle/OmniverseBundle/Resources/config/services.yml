@@ -1,0 +1,43 @@
+parameters:
+    syntetiq_omniverse.integration.type: 'omniverse'
+
+services:
+    SyntetiQ\Bundle\OmniverseBundle\Integration\OmniverseChannelType:
+        tags:
+            - { name: oro_integration.channel, type: '%syntetiq_omniverse.integration.type%' }
+
+    SyntetiQ\Bundle\OmniverseBundle\Integration\OmniverseTransport:
+        tags:
+            - { name: oro_integration.transport, type: '%syntetiq_omniverse.integration.type%', channel_type: '%syntetiq_omniverse.integration.type%' }
+
+    SyntetiQ\Bundle\OmniverseBundle\Condition\IsOmniverseActive:
+        arguments:
+            - '@doctrine'
+        tags:
+            - { name: oro_action.condition, alias: syntetiq_omniverse_is_active }
+
+    SyntetiQ\Bundle\OmniverseBundle\Provider\OmniverseClient:
+        arguments:
+            - '@doctrine'
+            - '@logger'
+            - '@oro_integration.transport.rest.client_factory'
+            - '@router'
+
+    SyntetiQ\Bundle\OmniverseBundle\EventListener\GenerateImagesRequestListener:
+        arguments:
+            - '@SyntetiQ\Bundle\OmniverseBundle\Provider\OmniverseClient'
+        tags:
+            - { name: doctrine.orm.entity_listener, entity: SyntetiQ\Bundle\OmniverseBundle\Entity\GenerateImagesRequest, event: postPersist }
+
+    SyntetiQ\Bundle\OmniverseBundle\EventListener\DataSetViewListener:
+        arguments:
+            - '@SyntetiQ\Bundle\OmniverseBundle\Condition\IsOmniverseActive'
+            - '@translator'
+        tags:
+            - { name: kernel.event_listener, event: oro_ui.scroll_data.before.model-data-set-view, method: onBeforeDataSetView }
+
+    SyntetiQ\Bundle\OmniverseBundle\Service\OmniverseResultHandler:
+        arguments:
+            - '@doctrine.orm.entity_manager'
+            - '@oro_attachment.file_manager'
+            - '@logger'

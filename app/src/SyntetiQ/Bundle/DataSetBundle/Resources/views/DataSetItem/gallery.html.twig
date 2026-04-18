@@ -1,0 +1,886 @@
+{% set pagination = {
+    page: 1,
+    perPage: 15,
+    perPageOptions: [3, 5, 10, 15, 20, 25, 50, 100],
+    totalItems: items|length,
+    totalPages: 1,
+    search: '',
+    filters: {}
+}|merge(pagination|default({})) %}
+{% set filters = {
+    search: '',
+    fileName: '',
+    group: '',
+    tag: '',
+    sourceType: '',
+    labels: []
+}|merge(pagination.filters|default({})) %}
+{% set selectedGalleryLabels = filters.labels|default([]) %}
+{% set selectedGalleryLabelsCount = selectedGalleryLabels|length %}
+{% set currentQuery = {
+    itemsView: 'gallery',
+    perPage: pagination.perPage,
+    search: '',
+    fileName: filters.fileName,
+    group: filters.group,
+    tag: filters.tag,
+    sourceType: filters.sourceType
+} %}
+{% if selectedGalleryLabelsCount %}
+    {% set currentQuery = currentQuery|merge({ labels: selectedGalleryLabels }) %}
+{% endif %}
+{% set currentPage = pagination.page %}
+{% set totalPages = pagination.totalPages %}
+{% set startItem = pagination.totalItems ? ((currentPage - 1) * pagination.perPage + 1) : 0 %}
+{% set endItem = pagination.totalItems ? (((currentPage * pagination.perPage) < pagination.totalItems) ? (currentPage * pagination.perPage) : pagination.totalItems) : 0 %}
+{% set groupOptions = {
+    '': 'All',
+    train: 'Train',
+    val: 'Val',
+    test: 'Test'
+} %}
+{% set sourceTypeOptions = {
+    '': 'All',
+    manual: 'Manual',
+    omniverse: 'Omniverse'
+} %}
+{% set tagOptions = pagination.options.tags|default([]) %}
+{% set labelOptions = pagination.options.labels|default([]) %}
+{% set hasGalleryItemsWithoutLabels = pagination.options.hasItemsWithoutLabels|default(false) %}
+{% set withoutLabelsFilterValue = pagination.options.withoutLabelsFilterValue|default(':without-labels:') %}
+{% set withoutLabelsFilterLabel = pagination.options.withoutLabelsFilterLabel|default('Without labels') %}
+{% if selectedGalleryLabelsCount == 1 %}
+    {% set galleryLabelSummary = selectedGalleryLabels|first == withoutLabelsFilterValue ? withoutLabelsFilterLabel : selectedGalleryLabels|first %}
+{% elseif selectedGalleryLabelsCount > 1 %}
+    {% set galleryLabelSummary = selectedGalleryLabelsCount ~ ' selected' %}
+{% else %}
+    {% set galleryLabelSummary = 'All' %}
+{% endif %}
+
+<div class="sq-data-set-gallery-toolbar">
+    <div class="sq-data-set-gallery-toolbar__main">
+        {% if viewToggle is defined and viewToggle|trim %}
+            <div class="sq-data-set-view-toggle">
+                {{ viewToggle|raw }}
+            </div>
+        {% endif %}
+
+        <div class="sq-data-set-gallery-filters" data-gallery-filters>
+            <div class="filter-item oro-drop sq-data-set-gallery-filter{% if filters.fileName %} is-active{% endif %}" data-gallery-filter>
+                <div class="sq-data-set-gallery-filter__toggle">
+                    <div class="btn dropdown-toggle filter-select filter-criteria-selector sq-data-set-gallery-filter__toggle-button" data-gallery-filter-toggle aria-expanded="false" role="button" tabindex="0">
+                        <span class="sq-data-set-gallery-filter__label">File Name:</span>
+                        <span class="filter-item-hint sq-data-set-gallery-filter__value">{% if filters.fileName %}contains "{{ filters.fileName }}"{% else %}All{% endif %}</span>
+                        {% if filters.fileName %}
+                            <a
+                                class="reset-filter sq-data-set-gallery-filter__clear"
+                                href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(currentQuery|merge({ itemsView: 'gallery', page: 1, search: '', fileName: '' }))) }}"
+                                aria-label="Clear file name filter"
+                            >×</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="filter-criteria dropdown-menu sq-data-set-gallery-filter__panel">
+                    <form method="get" class="sq-data-set-gallery-filter__form">
+                        <input type="hidden" name="itemsView" value="gallery">
+                        <input type="hidden" name="page" value="1">
+                        <input type="hidden" name="perPage" value="{{ pagination.perPage }}">
+                        <input type="hidden" name="search" value="">
+                        <input type="hidden" name="group" value="{{ filters.group }}">
+                        <input type="hidden" name="tag" value="{{ filters.tag }}">
+                        <input type="hidden" name="sourceType" value="{{ filters.sourceType }}">
+                        {% for selectedLabel in selectedGalleryLabels %}
+                            <input type="hidden" name="labels[]" value="{{ selectedLabel }}">
+                        {% endfor %}
+
+                        <div class="sq-data-set-gallery-filter__title">File Name</div>
+                        <div class="sq-data-set-gallery-filter__controls">
+                            <div class="sq-data-set-gallery-filter__operator">Contains</div>
+                            <input class="sq-data-set-gallery-filter__input" type="text" name="fileName" value="{{ filters.fileName }}" placeholder="Enter file name">
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="filter-item oro-drop sq-data-set-gallery-filter{% if filters.group %} is-active{% endif %}" data-gallery-filter data-gallery-group-filter>
+                <div class="sq-data-set-gallery-filter__toggle">
+                    <div class="btn dropdown-toggle filter-select filter-criteria-selector sq-data-set-gallery-filter__toggle-button" data-gallery-filter-toggle aria-expanded="false" role="button" tabindex="0">
+                        <span class="sq-data-set-gallery-filter__label">Group:</span>
+                        <span class="filter-item-hint sq-data-set-gallery-filter__value">{{ groupOptions[filters.group]|default('All') }}</span>
+                        {% if filters.group %}
+                            <a
+                                class="reset-filter sq-data-set-gallery-filter__clear"
+                                href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(currentQuery|merge({ itemsView: 'gallery', page: 1, search: '', group: '' }))) }}"
+                                aria-label="Clear group filter"
+                                data-gallery-group-clear
+                            >×</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="filter-criteria dropdown-menu sq-data-set-gallery-filter__panel">
+                    <form method="get" class="sq-data-set-gallery-filter__form" data-gallery-choice-form>
+                        <input type="hidden" name="itemsView" value="gallery">
+                        <input type="hidden" name="page" value="1">
+                        <input type="hidden" name="perPage" value="{{ pagination.perPage }}">
+                        <input type="hidden" name="search" value="">
+                        <input type="hidden" name="fileName" value="{{ filters.fileName }}">
+                        <input type="hidden" name="tag" value="{{ filters.tag }}">
+                        <input type="hidden" name="sourceType" value="{{ filters.sourceType }}">
+                        {% for selectedLabel in selectedGalleryLabels %}
+                            <input type="hidden" name="labels[]" value="{{ selectedLabel }}">
+                        {% endfor %}
+                        <input type="hidden" name="group" value="{{ filters.group }}" data-gallery-choice-value>
+
+                        <div class="sq-data-set-gallery-filter__title">Group</div>
+                        <div class="sq-data-set-gallery-filter__controls sq-data-set-gallery-filter__controls--stacked">
+                            <input
+                                type="search"
+                                value=""
+                                class="sq-data-set-gallery-filter__input"
+                                placeholder="Search group"
+                                data-gallery-choice-search
+                            >
+                            <div class="sq-data-set-gallery-filter__choice-list" data-gallery-choice-list>
+                                {% for optionValue, optionLabel in groupOptions %}
+                                    <button
+                                        type="button"
+                                        class="sq-data-set-gallery-filter__choice{% if optionValue == filters.group %} is-selected{% endif %}"
+                                        data-gallery-choice-option
+                                        data-value="{{ optionValue }}"
+                                        data-label="{{ optionLabel|lower }}"
+                                    >{{ optionLabel }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="filter-item oro-drop sq-data-set-gallery-filter{% if filters.tag %} is-active{% endif %}" data-gallery-filter data-gallery-tag-filter>
+                <div class="sq-data-set-gallery-filter__toggle">
+                    <div class="btn dropdown-toggle filter-select filter-criteria-selector sq-data-set-gallery-filter__toggle-button" data-gallery-filter-toggle aria-expanded="false" role="button" tabindex="0">
+                        <span class="sq-data-set-gallery-filter__label">Tag:</span>
+                        <span class="filter-item-hint sq-data-set-gallery-filter__value">{{ filters.tag ?: 'All' }}</span>
+                        {% if filters.tag %}
+                            <a
+                                class="reset-filter sq-data-set-gallery-filter__clear"
+                                href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(currentQuery|merge({ itemsView: 'gallery', page: 1, search: '', tag: '' }))) }}"
+                                aria-label="Clear tag filter"
+                                data-gallery-tag-clear
+                            >×</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="filter-criteria dropdown-menu sq-data-set-gallery-filter__panel">
+                    <form method="get" class="sq-data-set-gallery-filter__form" data-gallery-choice-form>
+                        <input type="hidden" name="itemsView" value="gallery">
+                        <input type="hidden" name="page" value="1">
+                        <input type="hidden" name="perPage" value="{{ pagination.perPage }}">
+                        <input type="hidden" name="search" value="">
+                        <input type="hidden" name="fileName" value="{{ filters.fileName }}">
+                        <input type="hidden" name="group" value="{{ filters.group }}">
+                        <input type="hidden" name="sourceType" value="{{ filters.sourceType }}">
+                        {% for selectedLabel in selectedGalleryLabels %}
+                            <input type="hidden" name="labels[]" value="{{ selectedLabel }}">
+                        {% endfor %}
+                        <input type="hidden" name="tag" value="{{ filters.tag }}" data-gallery-choice-value>
+
+                        <div class="sq-data-set-gallery-filter__title">Tag</div>
+                        <div class="sq-data-set-gallery-filter__controls sq-data-set-gallery-filter__controls--stacked">
+                            <input
+                                type="search"
+                                value=""
+                                class="sq-data-set-gallery-filter__input"
+                                placeholder="Search tag"
+                                data-gallery-choice-search
+                            >
+                            <div class="sq-data-set-gallery-filter__choice-list" data-gallery-choice-list>
+                                <button
+                                    type="button"
+                                    class="sq-data-set-gallery-filter__choice{% if filters.tag == '' %} is-selected{% endif %}"
+                                    data-gallery-choice-option
+                                    data-value=""
+                                    data-label="all"
+                                >All</button>
+                                {% for optionLabel in tagOptions %}
+                                    <button
+                                        type="button"
+                                        class="sq-data-set-gallery-filter__choice{% if optionLabel == filters.tag %} is-selected{% endif %}"
+                                        data-gallery-choice-option
+                                        data-value="{{ optionLabel }}"
+                                        data-label="{{ optionLabel|lower }}"
+                                    >{{ optionLabel }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if labelOptions|length or hasGalleryItemsWithoutLabels %}
+                <div class="filter-item oro-drop sq-data-set-gallery-filter{% if selectedGalleryLabelsCount %} is-active{% endif %}" data-gallery-filter data-gallery-label-filter>
+                    <div class="sq-data-set-gallery-filter__toggle">
+                        <div class="btn dropdown-toggle filter-select filter-criteria-selector sq-data-set-gallery-filter__toggle-button" data-gallery-filter-toggle aria-expanded="false" role="button" tabindex="0">
+                            <span class="sq-data-set-gallery-filter__label">Label:</span>
+                            <span class="filter-item-hint sq-data-set-gallery-filter__value">{{ galleryLabelSummary }}</span>
+                            {% if selectedGalleryLabelsCount %}
+                                <a
+                                    class="reset-filter sq-data-set-gallery-filter__clear"
+                                    href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(currentQuery|merge({ page: 1, labels: [] }))) }}"
+                                    aria-label="Clear label filter"
+                                    data-gallery-label-clear
+                                >×</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="filter-criteria dropdown-menu sq-data-set-gallery-filter__panel">
+                        <form method="get" class="sq-data-set-gallery-filter__form" data-gallery-check-form>
+                            <input type="hidden" name="itemsView" value="gallery">
+                            <input type="hidden" name="page" value="1">
+                            <input type="hidden" name="perPage" value="{{ pagination.perPage }}">
+                            <input type="hidden" name="search" value="">
+                            <input type="hidden" name="fileName" value="{{ filters.fileName }}">
+                            <input type="hidden" name="group" value="{{ filters.group }}">
+                            <input type="hidden" name="tag" value="{{ filters.tag }}">
+                            <input type="hidden" name="sourceType" value="{{ filters.sourceType }}">
+
+                            <div class="sq-data-set-gallery-filter__title">Label</div>
+                            <div class="sq-data-set-gallery-filter__controls sq-data-set-gallery-filter__controls--stacked">
+                                <input
+                                    type="search"
+                                    value=""
+                                    class="sq-data-set-gallery-filter__input"
+                                    placeholder="Search label"
+                                    data-gallery-check-search
+                                >
+                                <div class="sq-data-set-gallery-filter__choice-list sq-data-set-gallery-filter__choice-list--checks" data-gallery-check-list>
+                                    {% if hasGalleryItemsWithoutLabels %}
+                                        <label class="sq-data-set-gallery-filter__check" data-gallery-check-option data-label="{{ withoutLabelsFilterLabel|lower }}">
+                                            <input
+                                                type="checkbox"
+                                                name="labels[]"
+                                                value="{{ withoutLabelsFilterValue }}"
+                                                {% if withoutLabelsFilterValue in selectedGalleryLabels %}checked{% endif %}
+                                            >
+                                            <span>{{ withoutLabelsFilterLabel }}</span>
+                                        </label>
+                                    {% endif %}
+                                    {% for optionLabel in labelOptions %}
+                                        <label class="sq-data-set-gallery-filter__check" data-gallery-check-option data-label="{{ optionLabel|lower }}">
+                                            <input
+                                                type="checkbox"
+                                                name="labels[]"
+                                                value="{{ optionLabel }}"
+                                                {% if optionLabel in selectedGalleryLabels %}checked{% endif %}
+                                            >
+                                            <span>{{ optionLabel }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <div class="sq-data-set-gallery-filter__actions">
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                    {% if selectedGalleryLabelsCount %}
+                                        <a
+                                            class="btn"
+                                            href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(currentQuery|merge({ page: 1, labels: [] }))) }}"
+                                        >Clear</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="filter-item oro-drop sq-data-set-gallery-filter{% if filters.sourceType %} is-active{% endif %}" data-gallery-filter data-gallery-source-type-filter>
+                <div class="sq-data-set-gallery-filter__toggle">
+                    <div class="btn dropdown-toggle filter-select filter-criteria-selector sq-data-set-gallery-filter__toggle-button" data-gallery-filter-toggle aria-expanded="false" role="button" tabindex="0">
+                        <span class="sq-data-set-gallery-filter__label">Source Type:</span>
+                        <span class="filter-item-hint sq-data-set-gallery-filter__value">{{ sourceTypeOptions[filters.sourceType]|default('All') }}</span>
+                        {% if filters.sourceType %}
+                            <a
+                                class="reset-filter sq-data-set-gallery-filter__clear"
+                                href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(currentQuery|merge({ itemsView: 'gallery', page: 1, search: '', sourceType: '' }))) }}"
+                                aria-label="Clear source type filter"
+                                data-gallery-source-type-clear
+                            >×</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="filter-criteria dropdown-menu sq-data-set-gallery-filter__panel">
+                    <form method="get" class="sq-data-set-gallery-filter__form" data-gallery-choice-form>
+                        <input type="hidden" name="itemsView" value="gallery">
+                        <input type="hidden" name="page" value="1">
+                        <input type="hidden" name="perPage" value="{{ pagination.perPage }}">
+                        <input type="hidden" name="search" value="">
+                        <input type="hidden" name="fileName" value="{{ filters.fileName }}">
+                        <input type="hidden" name="group" value="{{ filters.group }}">
+                        <input type="hidden" name="tag" value="{{ filters.tag }}">
+                        {% for selectedLabel in selectedGalleryLabels %}
+                            <input type="hidden" name="labels[]" value="{{ selectedLabel }}">
+                        {% endfor %}
+                        <input type="hidden" name="sourceType" value="{{ filters.sourceType }}" data-gallery-choice-value>
+
+                        <div class="sq-data-set-gallery-filter__title">Source Type</div>
+                        <div class="sq-data-set-gallery-filter__controls sq-data-set-gallery-filter__controls--stacked">
+                            <input
+                                type="search"
+                                value=""
+                                class="sq-data-set-gallery-filter__input"
+                                placeholder="Search source type"
+                                data-gallery-choice-search
+                            >
+                            <div class="sq-data-set-gallery-filter__choice-list" data-gallery-choice-list>
+                                {% for optionValue, optionLabel in sourceTypeOptions %}
+                                    <button
+                                        type="button"
+                                        class="sq-data-set-gallery-filter__choice{% if optionValue == filters.sourceType %} is-selected{% endif %}"
+                                        data-gallery-choice-option
+                                        data-value="{{ optionValue }}"
+                                        data-label="{{ optionLabel|lower }}"
+                                    >{{ optionLabel }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <form method="get" class="sq-data-set-gallery-toolbar__form page-size">
+            <input type="hidden" name="itemsView" value="gallery">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="perPage" value="{{ pagination.perPage }}" data-gallery-per-page-input>
+            <input type="hidden" name="search" value="">
+            <input type="hidden" name="fileName" value="{{ filters.fileName }}">
+            <input type="hidden" name="group" value="{{ filters.group }}">
+            <input type="hidden" name="tag" value="{{ filters.tag }}">
+            <input type="hidden" name="sourceType" value="{{ filters.sourceType }}">
+            {% for selectedLabel in selectedGalleryLabels %}
+                <input type="hidden" name="labels[]" value="{{ selectedLabel }}">
+            {% endfor %}
+            {% set galleryPerPageDropdownId = 'sq-data-set-gallery-per-page-' ~ app.request.attributes.get('id') %}
+            <span class="control-label sq-data-set-gallery-toolbar__per-page-label">View</span>
+            <div class="btn-group">
+                <button
+                    class="btn dropdown-toggle"
+                    type="button"
+                    id="{{ galleryPerPageDropdownId }}"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-label="View per page"
+                    data-placement="bottom-end"
+                    data-position-fixed="false"
+                >
+                    {{ pagination.perPage }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="{{ galleryPerPageDropdownId }}">
+                    {% for option in pagination.perPageOptions %}
+                        <li>
+                            <a href="#" class="dropdown-item" data-gallery-per-page-option data-value="{{ option }}">{{ option }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <span class="sq-data-set-gallery-toolbar__per-page-suffix">per page</span>
+        </form>
+    </div>
+
+    <div class="sq-data-set-gallery-toolbar__summary">
+        Showing {{ startItem }}-{{ endItem }} of {{ pagination.totalItems }} items
+    </div>
+</div>
+
+<script>
+    window.sqDataSetColor = window.sqDataSetColor || function (label) {
+        var normalized = String(label || 'N/A');
+        var hash = 2166136261;
+
+        for (var i = 0; i < normalized.length; i++) {
+            hash ^= normalized.charCodeAt(i);
+            hash = Math.imul(hash, 16777619);
+        }
+
+        hash >>>= 0;
+
+        var hue = hash % 360;
+        var saturation = 62 + ((hash >>> 9) % 24);
+        var lightness = 34 + ((hash >>> 17) % 18);
+        var backgroundLightness = 90 + ((hash >>> 25) % 6);
+
+        return {
+            border: 'hsl(' + hue + ', ' + saturation + '%, ' + lightness + '%)',
+            background: 'hsla(' + hue + ', ' + Math.min(saturation + 8, 92) + '%, ' + backgroundLightness + '%, 0.95)',
+            text: 'hsl(' + hue + ', ' + Math.max(saturation - 6, 52) + '%, ' + Math.max(lightness - 18, 18) + '%)'
+        };
+    };
+
+    window.sqApplyDataSetLabelColors = window.sqApplyDataSetLabelColors || function (root) {
+        var scope = root || document;
+        var labels = scope.querySelectorAll('[data-object-label]');
+
+        for (var i = 0; i < labels.length; i++) {
+            var label = labels[i];
+            var colors = window.sqDataSetColor(label.getAttribute('data-object-label'));
+
+            label.style.borderColor = colors.border;
+            label.style.backgroundColor = colors.background;
+            label.style.color = colors.text;
+        }
+    };
+
+    (function () {
+        var root = document.querySelector('[data-gallery-filters]');
+        if (!root) {
+            return;
+        }
+
+        var filters = root.querySelectorAll('[data-gallery-filter]');
+        var loadingClass = 'is-loading';
+
+        function setFilterLoading(filter) {
+            if (!filter) {
+                return;
+            }
+
+            filter.classList.add(loadingClass);
+
+            var toggle = filter.querySelector('[data-gallery-filter-toggle]');
+            if (toggle) {
+                toggle.setAttribute('aria-disabled', 'true');
+                toggle.setAttribute('tabindex', '-1');
+            }
+        }
+
+        function closeFilters(exceptFilter) {
+            for (var i = 0; i < filters.length; i++) {
+                if (filters[i] === exceptFilter) {
+                    continue;
+                }
+
+                filters[i].classList.remove('is-open');
+
+                var toggle = filters[i].querySelector('[data-gallery-filter-toggle]');
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+            }
+        }
+
+        for (var i = 0; i < filters.length; i++) {
+            (function (filter) {
+                var toggle = filter.querySelector('[data-gallery-filter-toggle]');
+                if (!toggle) {
+                    return;
+                }
+
+                toggle.addEventListener('click', function () {
+                    if (filter.classList.contains(loadingClass)) {
+                        return;
+                    }
+
+                    var isOpen = filter.classList.contains('is-open');
+                    closeFilters(filter);
+                    filter.classList.toggle('is-open', !isOpen);
+                    toggle.setAttribute('aria-expanded', String(!isOpen));
+                });
+
+                toggle.addEventListener('keydown', function (event) {
+                    if (event.key !== 'Enter' && event.key !== ' ') {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    toggle.click();
+                });
+            })(filters[i]);
+        }
+
+        var choiceForms = root.querySelectorAll('[data-gallery-choice-form]');
+        for (var j = 0; j < choiceForms.length; j++) {
+            (function (form) {
+                var searchInput = form.querySelector('[data-gallery-choice-search]');
+                var hiddenInput = form.querySelector('[data-gallery-choice-value]');
+                var options = form.querySelectorAll('[data-gallery-choice-option]');
+                var parentFilter = form.closest('[data-gallery-filter]');
+
+                if (!hiddenInput || !options.length) {
+                    return;
+                }
+
+                function applySearch() {
+                    if (!searchInput) {
+                        return;
+                    }
+
+                    var term = searchInput.value.toLowerCase();
+                    for (var k = 0; k < options.length; k++) {
+                        var option = options[k];
+                        var label = option.getAttribute('data-label') || '';
+                        option.style.display = label.indexOf(term) !== -1 ? '' : 'none';
+                    }
+                }
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', applySearch);
+                }
+
+                for (var k = 0; k < options.length; k++) {
+                    (function (option) {
+                        option.addEventListener('click', function () {
+                            setFilterLoading(parentFilter);
+                            hiddenInput.value = option.getAttribute('data-value') || '';
+                            form.submit();
+                        });
+                    })(options[k]);
+                }
+            })(choiceForms[j]);
+        }
+
+        var checkForms = root.querySelectorAll('[data-gallery-check-form]');
+        for (var l = 0; l < checkForms.length; l++) {
+            (function (form) {
+                var searchInput = form.querySelector('[data-gallery-check-search]');
+                var options = form.querySelectorAll('[data-gallery-check-option]');
+                var parentFilter = form.closest('[data-gallery-filter]');
+
+                if (searchInput) {
+                    searchInput.addEventListener('input', function () {
+                        var term = searchInput.value.toLowerCase();
+
+                        for (var k = 0; k < options.length; k++) {
+                            var option = options[k];
+                            var label = option.getAttribute('data-label') || '';
+
+                            option.style.display = label.indexOf(term) !== -1 ? '' : 'none';
+                        }
+                    });
+                }
+
+                form.addEventListener('submit', function () {
+                    setFilterLoading(parentFilter);
+                });
+            })(checkForms[l]);
+        }
+
+        var clearLinks = root.querySelectorAll('[data-gallery-group-clear]');
+        for (var m = 0; m < clearLinks.length; m++) {
+            (function (link) {
+                link.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    var filter = link.closest('[data-gallery-group-filter]');
+                    setFilterLoading(filter);
+                });
+            })(clearLinks[m]);
+        }
+
+        var tagClearLinks = root.querySelectorAll('[data-gallery-tag-clear]');
+        for (var p = 0; p < tagClearLinks.length; p++) {
+            (function (link) {
+                link.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    var filter = link.closest('[data-gallery-tag-filter]');
+                    setFilterLoading(filter);
+                });
+            })(tagClearLinks[p]);
+        }
+
+        var sourceTypeClearLinks = root.querySelectorAll('[data-gallery-source-type-clear]');
+        for (var q = 0; q < sourceTypeClearLinks.length; q++) {
+            (function (link) {
+                link.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    var filter = link.closest('[data-gallery-source-type-filter]');
+                    setFilterLoading(filter);
+                });
+            })(sourceTypeClearLinks[q]);
+        }
+
+        var labelClearLinks = root.querySelectorAll('[data-gallery-label-clear]');
+        for (var s = 0; s < labelClearLinks.length; s++) {
+            (function (link) {
+                link.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    var filter = link.closest('[data-gallery-label-filter]');
+                    setFilterLoading(filter);
+                });
+            })(labelClearLinks[s]);
+        }
+
+        var inlineResetLinks = root.querySelectorAll('.sq-data-set-gallery-filter__clear');
+        for (var n = 0; n < inlineResetLinks.length; n++) {
+            inlineResetLinks[n].addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+        }
+
+        var perPageForms = document.querySelectorAll('.sq-data-set-gallery-toolbar__form');
+        for (var r = 0; r < perPageForms.length; r++) {
+            (function (form) {
+                var input = form.querySelector('[data-gallery-per-page-input]');
+                var options = form.querySelectorAll('[data-gallery-per-page-option]');
+                if (!input || !options.length) {
+                    return;
+                }
+
+                for (var optionIndex = 0; optionIndex < options.length; optionIndex++) {
+                    (function (option) {
+                        option.addEventListener('click', function (event) {
+                            event.preventDefault();
+                            input.value = option.getAttribute('data-value') || input.value;
+                            form.submit();
+                        });
+                    })(options[optionIndex]);
+                }
+            })(perPageForms[r]);
+        }
+
+        document.addEventListener('click', function (event) {
+            if (root.contains(event.target)) {
+                return;
+            }
+
+            closeFilters();
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') {
+                return;
+            }
+
+            closeFilters();
+        });
+    })();
+</script>
+
+{% if items|length %}
+    <div class="sq-data-set-gallery">
+        {% for item in items %}
+            {% set width = item.imgWidth ?: 0 %}
+            {% set height = item.imgHeight ?: 0 %}
+            {% set maxPreviewWidth = 320 %}
+            {% set maxPreviewHeight = 320 %}
+            {% set previewWidth = width %}
+            {% set previewHeight = height %}
+            {% if width > 0 and height > 0 and (width > maxPreviewWidth or height > maxPreviewHeight) %}
+                {% if (maxPreviewWidth / width) < (maxPreviewHeight / height) %}
+                    {% set previewWidth = maxPreviewWidth %}
+                    {% set previewHeight = (height * (maxPreviewWidth / width))|round(0, 'common') %}
+                {% else %}
+                    {% set previewHeight = maxPreviewHeight %}
+                    {% set previewWidth = (width * (maxPreviewHeight / height))|round(0, 'common') %}
+                {% endif %}
+            {% endif %}
+            {% set previewWidth = previewWidth > 0 ? previewWidth : maxPreviewWidth %}
+            {% set previewHeight = previewHeight > 0 ? previewHeight : maxPreviewHeight %}
+            {% set canvasId = 'gallery-canvas-' ~ item.id %}
+            {% set imageId = 'gallery-image-' ~ item.id %}
+            {% set objects = [] %}
+            {% set objectLabels = {} %}
+            {% for objectConfiguration in item.objectConfiguration %}
+                {% set objectName = objectConfiguration.name ?: 'N/A' %}
+                {% set objects = objects|merge([{
+                    name: objectName,
+                    minX: objectConfiguration.minX,
+                    maxX: objectConfiguration.maxX,
+                    minY: objectConfiguration.minY,
+                    maxY: objectConfiguration.maxY
+                }]) %}
+                {% set objectLabels = objectLabels|merge({ (objectName): objectName }) %}
+            {% endfor %}
+
+            {% set editPath = path('syntetiq_model_data_set_item_edit', { id: item.id, returnUrl: app.request.uri }) %}
+
+            <div class="sq-data-set-gallery__tile">
+                {% if is_granted('syntetiq_model_data_set_item_edit') %}
+                    <a
+                        class="sq-data-set-gallery__card-link"
+                        href="{{ editPath }}"
+                        aria-label="Edit {{ item.image and item.image.originalFilename ? item.image.originalFilename : 'data set item' }}"
+                    ></a>
+                {% endif %}
+
+                <div class="sq-data-set-gallery__media">
+                    <div class="sq-data-set-gallery__image-wrap" style="width: {{ previewWidth }}px; height: {{ previewHeight }}px;">
+                        <img
+                            id="{{ imageId }}"
+                            src="{{ item.image ? resized_image_url(item.image, previewWidth, previewHeight) : '' }}"
+                            width="{{ previewWidth }}"
+                            height="{{ previewHeight }}"
+                            alt="{{ item.image and item.image.originalFilename ? item.image.originalFilename : 'Data set item image' }}"
+                        >
+                        <canvas id="{{ canvasId }}" width="{{ previewWidth }}" height="{{ previewHeight }}"></canvas>
+                    </div>
+                </div>
+
+                <div class="sq-data-set-gallery__meta">
+                    <div><strong>File Name:</strong> {{ item.image and item.image.originalFilename ? item.image.originalFilename : 'N/A' }}</div>
+                    <div><strong>Group:</strong> {{ item.group ?: 'N/A' }}</div>
+                    <div><strong>Tags:</strong> {{ item.tagsDisplay ?: 'N/A' }}</div>
+                    <div><strong>Dimensions:</strong> {{ width }} x {{ height }}</div>
+                    <div><strong>Objects:</strong> {{ objects|length }}</div>
+                    <div>
+                        <strong>Labels:</strong>
+                        {% if objectLabels %}
+                            <span class="sq-data-set-object-labels">
+                                {% for objectLabel in objectLabels %}
+                                    <span class="sq-data-set-object-label" data-object-label="{{ objectLabel }}">{{ objectLabel }}</span>
+                                {% endfor %}
+                            </span>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                </div>
+
+                <script>
+                    (function () {
+                        var image = document.getElementById('{{ imageId }}');
+                        var canvas = document.getElementById('{{ canvasId }}');
+                        if (!image || !canvas) {
+                            return;
+                        }
+
+                        var context = canvas.getContext('2d');
+                        var objects = {{ objects|json_encode|raw }};
+                        var originalWidth = {{ width }};
+                        var originalHeight = {{ height }};
+                        var previewWidth = {{ previewWidth }};
+                        var previewHeight = {{ previewHeight }};
+                        var scaleX = originalWidth > 0 ? previewWidth / originalWidth : 1;
+                        var scaleY = originalHeight > 0 ? previewHeight / originalHeight : 1;
+
+                        for (var i = 0; i < objects.length; i++) {
+                            var object = objects[i];
+                            var rectWidth = (object.maxX - object.minX) * scaleX;
+                            var rectHeight = (object.maxY - object.minY) * scaleY;
+                            var colors = window.sqDataSetColor(object.name);
+
+                            context.strokeStyle = colors.border;
+                            context.lineWidth = 2;
+                            context.strokeRect(object.minX * scaleX, object.minY * scaleY, rectWidth, rectHeight);
+                        }
+                    })();
+                </script>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="sq-data-set-gallery__empty">
+        No items found in this data set.
+    </div>
+{% endif %}
+
+<script>
+    window.sqApplyDataSetLabelColors(document.querySelector('.sq-data-set-gallery') || document);
+</script>
+
+{% if pagination.totalItems %}
+    <div class="grid-toolbar sq-data-set-gallery-pagination">
+        <form method="get" class="grid-toolbar__part grid-toolbar__part--start" data-gallery-pagination-form>
+            <input type="hidden" name="itemsView" value="gallery">
+            <input type="hidden" name="perPage" value="{{ pagination.perPage }}">
+            <input type="hidden" name="search" value="">
+            <input type="hidden" name="fileName" value="{{ filters.fileName }}">
+            <input type="hidden" name="group" value="{{ filters.group }}">
+            <input type="hidden" name="tag" value="{{ filters.tag }}">
+            <input type="hidden" name="sourceType" value="{{ filters.sourceType }}">
+            {% for selectedLabel in selectedGalleryLabels %}
+                <input type="hidden" name="labels[]" value="{{ selectedLabel }}">
+            {% endfor %}
+
+            <div class="pagination">
+                <span>Page:</span>
+                <button
+                    type="button"
+                    class="btn btn-icon btn-light pagination-trigger{% if currentPage <= 1 %} disabled{% endif %}"
+                    data-gallery-page-target="{{ currentPage > 1 ? currentPage - 1 : 1 }}"
+                    title="Prev"
+                    aria-label="Previous page"
+                    {% if currentPage <= 1 %}disabled{% endif %}
+                >
+                    <span class="fa-chevron-left hide-text" aria-hidden="true">Prev</span>
+                </button>
+                <input
+                    type="number"
+                    name="page"
+                    value="{{ currentPage }}"
+                    min="1"
+                    max="{{ totalPages }}"
+                    class="grid-toolbar-input input-widget"
+                    data-gallery-page-input
+                    aria-label="data grid pagination input"
+                >
+                <button
+                    type="button"
+                    class="btn btn-icon btn-light pagination-trigger{% if currentPage >= totalPages %} disabled{% endif %}"
+                    data-gallery-page-target="{{ currentPage < totalPages ? currentPage + 1 : totalPages }}"
+                    title="Next"
+                    aria-label="Next page"
+                    {% if currentPage >= totalPages %}disabled{% endif %}
+                >
+                    <span class="fa-chevron-right hide-text" aria-hidden="true">Next</span>
+                </button>
+                <span>of {{ totalPages }}</span>
+                <span class="totals-label">Total of {{ pagination.totalItems }} records</span>
+            </div>
+            <div class="visible-items-counter" style="display: none;">
+                Showing {{ startItem }}-{{ endItem }} of {{ pagination.totalItems }} items
+            </div>
+        </form>
+    </div>
+    <script>
+        (function () {
+            var form = document.querySelector('[data-gallery-pagination-form]');
+            if (!form) {
+                return;
+            }
+
+            var input = form.querySelector('[data-gallery-page-input]');
+            if (!input) {
+                return;
+            }
+
+            function submitPageForm() {
+                var min = parseInt(input.getAttribute('min') || '1', 10);
+                var max = parseInt(input.getAttribute('max') || '1', 10);
+                var value = parseInt(input.value || String(min), 10);
+
+                if (isNaN(value)) {
+                    value = min;
+                }
+
+                value = Math.min(Math.max(value, min), max);
+                input.value = String(value);
+                form.submit();
+            }
+
+            input.addEventListener('change', submitPageForm);
+            input.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter') {
+                    return;
+                }
+
+                event.preventDefault();
+                submitPageForm();
+            });
+
+            var navigationButtons = form.querySelectorAll('[data-gallery-page-target]');
+            for (var i = 0; i < navigationButtons.length; i++) {
+                (function (button) {
+                    button.addEventListener('click', function () {
+                        var targetPage = button.getAttribute('data-gallery-page-target');
+                        if (!targetPage) {
+                            return;
+                        }
+
+                        input.value = targetPage;
+                        submitPageForm();
+                    });
+                })(navigationButtons[i]);
+            }
+        })();
+    </script>
+{% endif %}

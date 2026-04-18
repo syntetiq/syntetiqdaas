@@ -1,0 +1,94 @@
+volumes:
+    syntetiq_letsencrypt:
+
+services:
+    traefik:
+        image: traefik:v3.6.2
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-traefik
+        restart: always
+        ports:
+            - 8888:8888
+            - 80:80
+            - 443:443
+        environment:
+            # Traefik dashboard
+            TRAEFIK_API_DASHBOARD: "true"
+            TRAEFIK_ENTRYPOINTS_dashboard_ADDRESS: :8888
+
+            # Access Logs
+            TRAEFIK_ACCESSLOG_FORMAT: json
+            TRAEFIK_ACCESSLOG_FIELDS_DEFAULTMODE: drop
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_ClientHost: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_DownstreamContentSize: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_DownstreamStatus: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_Duration: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_RequestHost: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_RequestMethod: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_RequestPath: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_RequestPort: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_RequestProtocol: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_RouterName: keep
+            TRAEFIK_ACCESSLOG_FIELDS_NAMES_StartUTC: keep
+
+            # Traefik Logs
+            TRAEFIK_LOG_FORMAT: json
+
+            # Providers
+            TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT: "false"
+            TRAEFIK_PROVIDERS_DOCKER_NETWORK: syntetiq,syntetiq-docker
+            # TRAEFIK_PROVIDERS_FILE_DIRECTORY: /etc/traefik/rules
+            TRAEFIK_PROVIDERS_FILE_FILENAME: /etc/traefik/dynamic.yml
+
+            # EntryPoints configuration
+            TRAEFIK_ENTRYPOINTS_web_ADDRESS: :80
+            TRAEFIK_ENTRYPOINTS_web_HTTP_REDIRECTIONS_ENTRYPOINT_TO: websecure
+            TRAEFIK_ENTRYPOINTS_web_HTTP_REDIRECTIONS_ENTRYPOINT_SCHEME: https
+            TRAEFIK_ENTRYPOINTS_websecure_ADDRESS: :443
+
+            # Let's Encrypt - still useful for public domains
+            TRAEFIK_CERTIFICATESRESOLVERS_lets-encrypt_ACME_EMAIL: "${ACME_EMAIL:?Please set the ACME_EMAIL env variable}"
+            TRAEFIK_CERTIFICATESRESOLVERS_lets-encrypt_ACME_TLSCHALLENGE: "true"
+            TRAEFIK_CERTIFICATESRESOLVERS_lets-encrypt_ACME_STORAGE: /letsencrypt/acme.json
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - "./certs:/certs:ro"
+            - "./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro"
+            - syntetiq_letsencrypt:/letsencrypt
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        logging:
+            driver: "json-file"
+            options:
+                max-size: 100m
+                max-file: "10"
+        labels: # <--- UNCOMMENT THIS SECTION AND ENSURE CORRECT INDENTATION
+            traefik.enable: "true"
+            traefik.http.routers.dashboard.entrypoints: dashboard
+            traefik.http.routers.dashboard.service: api@internal
+            traefik.http.routers.dashboard.rule: Host(`localhost`)
+            # traefik.http.routers.dashboard.tls: "true"
+        # If you want to access it via HTTPS, you can add this:
+            # traefik.http.routers.dashboard.entrypoints: websecure
+            # traefik.http.routers.dashboard.tls.certresolver: lets-encrypt # Only if using Let's Encrypt for dashboard
+            # traefik.http.routers.dashboard.rule: Host(`traefik.yourdomain.com`)
+
+# override for syntetiq-nginx service to use Traefik
+    syntetiq-nginx:
+        environment:
+            NGINX_PHPCLI_UPSTREAM: "${PHPCLI_CONTAINER:?Please set PHPCLI_CONTAINER}:8080"
+            NGINX_SERVER_NAME: "${U_HOST:-syntetiq.docker.localhost}"
+        volumes:
+            - ../app:/data:cached
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf:cached
+            - ./nginx/templates:/etc/nginx/templates:ro
+            - ./nginx/servers:/etc/nginx/servers
+            - ./nginx/ssl:/etc/ssl/private                     # Share hosts certificates
+        ports: !reset []
+        labels:
+            traefik.enable: "true"
+            traefik.docker.network: "syntetiq-docker"
+            traefik.http.services.syntetiq-nginx.loadbalancer.server.port: "80"
+            traefik.http.routers.syntetiq-nginx.rule: Host(`${U_HOST:-localhost}`) || Host(`sq.docker.localhost`) # Change this to your domain
+            traefik.http.routers.syntetiq-nginx.entrypoints: websecure
+            traefik.http.routers.syntetiq-nginx.tls.certresolver: lets-encrypt

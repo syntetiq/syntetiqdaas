@@ -1,0 +1,760 @@
+{% macro helpTooltip(help, label) %}
+    {% if help %}
+        {% set translationKey = help.translationKey|default(null) %}
+        <span class="sq-dataset-qa-panel__tooltip">
+            <button
+                type="button"
+                class="sq-dataset-qa-panel__tooltip-trigger"
+                aria-label="Show help for {{ label }}"
+            >?</button>
+            <div class="sq-dataset-qa-panel__tooltip-content" role="tooltip">
+                <div class="sq-dataset-qa-panel__tooltip-title">{{ label }}</div>
+
+                {% if translationKey %}
+                    {% set whatKey = translationKey ~ '.what' %}
+                    {% set meaningKey = translationKey ~ '.meaning' %}
+                    {% set whyKey = translationKey ~ '.why' %}
+                    {% set limitationsKey = translationKey ~ '.limitations' %}
+                {% endif %}
+
+                {% if translationKey and whatKey|trans != whatKey %}
+                    <div class="sq-dataset-qa-panel__tooltip-section">
+                        <div class="sq-dataset-qa-panel__tooltip-heading">What it is</div>
+                        <p class="sq-dataset-qa-panel__tooltip-text">{{ whatKey|trans }}</p>
+                    </div>
+                {% endif %}
+
+                {% if translationKey and meaningKey|trans != meaningKey %}
+                    <div class="sq-dataset-qa-panel__tooltip-section">
+                        <div class="sq-dataset-qa-panel__tooltip-heading">How to read it</div>
+                        <p class="sq-dataset-qa-panel__tooltip-text">{{ meaningKey|trans }}</p>
+                    </div>
+                {% endif %}
+
+                {% if help.status is defined and help.status %}
+                    {% set statusKey = 'syntetiq.dataset.qa.help.status.' ~ help.status %}
+                    {% if statusKey|trans != statusKey %}
+                        <div class="sq-dataset-qa-panel__tooltip-section">
+                            <div class="sq-dataset-qa-panel__tooltip-heading">Current status</div>
+                            <p class="sq-dataset-qa-panel__tooltip-text">{{ statusKey|trans }}</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+                {% if translationKey and whyKey|trans != whyKey %}
+                    <div class="sq-dataset-qa-panel__tooltip-section">
+                        <div class="sq-dataset-qa-panel__tooltip-heading">Why it matters</div>
+                        <p class="sq-dataset-qa-panel__tooltip-text">{{ whyKey|trans }}</p>
+                    </div>
+                {% endif %}
+
+                {% if translationKey and limitationsKey|trans != limitationsKey %}
+                    <div class="sq-dataset-qa-panel__tooltip-section">
+                        <div class="sq-dataset-qa-panel__tooltip-heading">Limitations</div>
+                        <p class="sq-dataset-qa-panel__tooltip-text">{{ limitationsKey|trans }}</p>
+                    </div>
+                {% endif %}
+
+                {% if help.note is defined and help.note %}
+                    <div class="sq-dataset-qa-panel__tooltip-section">
+                        <div class="sq-dataset-qa-panel__tooltip-heading">Additional note</div>
+                        <p class="sq-dataset-qa-panel__tooltip-text">{{ help.note }}</p>
+                    </div>
+                {% endif %}
+
+                {% if translationKey %}
+                    {% set suggestions = [] %}
+                    {% for index in 1..5 %}
+                        {% set improveKey = translationKey ~ '.improve.' ~ index %}
+                        {% if improveKey|trans != improveKey %}
+                            {% set suggestions = suggestions|merge([improveKey|trans]) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if suggestions is not empty %}
+                        <div class="sq-dataset-qa-panel__tooltip-section">
+                            <div class="sq-dataset-qa-panel__tooltip-heading">How to improve</div>
+                            <ul class="sq-dataset-qa-panel__tooltip-list">
+                                {% for suggestion in suggestions %}
+                                    <li>{{ suggestion }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </span>
+    {% endif %}
+{% endmacro %}
+
+{% import _self as qaUi %}
+
+<style>
+    .sq-dataset-qa-panel {
+        padding: 16px;
+        background: #fff;
+        border: 1px solid #e5e8ef;
+        border-radius: 6px;
+    }
+
+    .sq-dataset-qa-panel__header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .sq-dataset-qa-panel__title {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2d3d;
+    }
+
+    .sq-dataset-qa-panel__meta {
+        color: #5f6b7a;
+        font-size: 13px;
+    }
+
+    .sq-dataset-qa-panel__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: .04em;
+    }
+
+    .sq-dataset-qa-panel__status--idle,
+    .sq-dataset-qa-panel__status--queued {
+        background: #eef2ff;
+        color: #4338ca;
+    }
+
+    .sq-dataset-qa-panel__status--running {
+        background: #ecfeff;
+        color: #0f766e;
+    }
+
+    .sq-dataset-qa-panel__status--succeeded {
+        background: #ecfdf3;
+        color: #166534;
+    }
+
+    .sq-dataset-qa-panel__status--failed {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .sq-dataset-qa-panel__cards,
+    .sq-dataset-qa-panel__list,
+    .sq-dataset-qa-panel__files {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .sq-dataset-qa-panel__card,
+    .sq-dataset-qa-panel__item,
+    .sq-dataset-qa-panel__file {
+        border: 1px solid #e5e8ef;
+        border-radius: 6px;
+        padding: 12px;
+        background: #fbfcfe;
+    }
+
+    .sq-dataset-qa-panel__label-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 4px;
+        min-width: 0;
+    }
+
+    .sq-dataset-qa-panel__card-label,
+    .sq-dataset-qa-panel__item-label {
+        display: block;
+        font-size: 11px;
+        color: #7b8794;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    .sq-dataset-qa-panel__card-value,
+    .sq-dataset-qa-panel__item-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2d3d;
+    }
+
+    .sq-dataset-qa-panel__tooltip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .sq-dataset-qa-panel__tooltip-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #fff;
+        color: #475569;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: help;
+    }
+
+    .sq-dataset-qa-panel__tooltip-trigger:hover,
+    .sq-dataset-qa-panel__tooltip-trigger:focus {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1d4ed8;
+        outline: none;
+    }
+
+    .sq-dataset-qa-panel__tooltip-content {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: min(360px, calc(100vw - 16px));
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: #0f172a;
+        color: #e2e8f0;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translate(-50%, 4px);
+        transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+        z-index: 1000;
+    }
+
+    .sq-dataset-qa-panel__tooltip-content::before {
+        content: '';
+        position: absolute;
+        top: -6px;
+        left: var(--sq-dataset-qa-tooltip-arrow-left, 50%);
+        transform: translateX(-50%);
+        border-style: solid;
+        border-width: 0 6px 6px 6px;
+        border-color: transparent transparent #0f172a transparent;
+    }
+
+    .sq-dataset-qa-panel__tooltip--above .sq-dataset-qa-panel__tooltip-content {
+        transform: translate(-50%, -4px);
+    }
+
+    .sq-dataset-qa-panel__tooltip--above .sq-dataset-qa-panel__tooltip-content::before {
+        top: auto;
+        bottom: -6px;
+        border-width: 6px 6px 0 6px;
+        border-color: #0f172a transparent transparent transparent;
+    }
+
+    .sq-dataset-qa-panel__tooltip:hover .sq-dataset-qa-panel__tooltip-content,
+    .sq-dataset-qa-panel__tooltip:focus-within .sq-dataset-qa-panel__tooltip-content {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translate(-50%, 0);
+    }
+
+    .sq-dataset-qa-panel__tooltip-title {
+        margin: 0 0 10px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .sq-dataset-qa-panel__tooltip-section + .sq-dataset-qa-panel__tooltip-section {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .sq-dataset-qa-panel__tooltip-heading {
+        margin-bottom: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #93c5fd;
+    }
+
+    .sq-dataset-qa-panel__tooltip-text {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #e2e8f0;
+    }
+
+    .sq-dataset-qa-panel__tooltip-list {
+        margin: 0;
+        padding-left: 18px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: #e2e8f0;
+    }
+
+    .sq-dataset-qa-panel__tooltip-list li + li {
+        margin-top: 4px;
+    }
+
+    .sq-dataset-qa-panel__section {
+        margin-top: 18px;
+    }
+
+    .sq-dataset-qa-panel__section-title {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1f2d3d;
+    }
+
+    .sq-dataset-qa-panel__section-status {
+        display: inline-block;
+        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .sq-dataset-qa-panel__message,
+    .sq-dataset-qa-panel__empty,
+    .sq-dataset-qa-panel__error,
+    .sq-dataset-qa-panel__warning {
+        padding: 14px;
+        border-radius: 6px;
+        border: 1px solid #e5e8ef;
+        background: #fff;
+        color: #334155;
+        white-space: pre-wrap;
+    }
+
+    .sq-dataset-qa-panel__error {
+        border-color: #fecaca;
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .sq-dataset-qa-panel__warning {
+        border-color: #fde68a;
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+    .sq-dataset-qa-panel__progress {
+        margin-top: 16px;
+        margin-bottom: 16px;
+        padding: 14px;
+        border-radius: 6px;
+        border: 1px solid #e5e8ef;
+        background: #fbfcfe;
+    }
+
+    .sq-dataset-qa-panel__progress-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .sq-dataset-qa-panel__progress-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2d3d;
+    }
+
+    .sq-dataset-qa-panel__progress-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .sq-dataset-qa-panel__progress-track {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        overflow: hidden;
+    }
+
+    .sq-dataset-qa-panel__progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0ea5e9 0%, #14b8a6 100%);
+        border-radius: 999px;
+        transition: width .2s ease;
+    }
+
+    .sq-dataset-qa-panel__progress-message {
+        margin-top: 10px;
+        font-size: 13px;
+        color: #475569;
+    }
+
+    .sq-dataset-qa-panel__artifacts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+        gap: 16px;
+    }
+
+    .sq-dataset-qa-panel__artifact {
+        border: 1px solid #e5e8ef;
+        border-radius: 6px;
+        padding: 12px;
+        background: #fbfcfe;
+    }
+
+    .sq-dataset-qa-panel__artifact img {
+        display: block;
+        width: 100%;
+        border-radius: 4px;
+        border: 1px solid #edf2f7;
+        background: #fff;
+        margin-bottom: 10px;
+    }
+
+    .sq-dataset-qa-panel__artifact-title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2d3d;
+    }
+
+    .sq-dataset-qa-panel__artifact-description,
+    .sq-dataset-qa-panel__file-description {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+    }
+</style>
+
+<script>
+    (function () {
+        if (window.__sqDatasetQaTooltipInit) {
+            return;
+        }
+
+        window.__sqDatasetQaTooltipInit = true;
+
+        var TOOLTIP_SELECTOR = '.sq-dataset-qa-panel__tooltip';
+        var TRIGGER_SELECTOR = '.sq-dataset-qa-panel__tooltip-trigger';
+        var CONTENT_SELECTOR = '.sq-dataset-qa-panel__tooltip-content';
+        var VIEWPORT_PADDING = 8;
+        var TOOLTIP_GAP = 8;
+        var activeTooltip = null;
+
+        function getTooltipTarget(target) {
+            if (!(target instanceof Element)) {
+                return null;
+            }
+
+            return target.closest(TOOLTIP_SELECTOR);
+        }
+
+        function clearActiveTooltip(tooltip) {
+            if (activeTooltip === tooltip) {
+                activeTooltip = null;
+            }
+        }
+
+        function positionTooltip(tooltip) {
+            if (!tooltip) {
+                return;
+            }
+
+            var trigger = tooltip.querySelector(TRIGGER_SELECTOR);
+            var content = tooltip.querySelector(CONTENT_SELECTOR);
+            if (!trigger || !content) {
+                return;
+            }
+
+            tooltip.classList.remove('sq-dataset-qa-panel__tooltip--above');
+
+            var triggerRect = trigger.getBoundingClientRect();
+            var tooltipWidth = Math.min(content.offsetWidth || 360, window.innerWidth - (VIEWPORT_PADDING * 2));
+            var tooltipHeight = content.offsetHeight || 0;
+            var triggerCenter = triggerRect.left + (triggerRect.width / 2);
+            var tooltipCenter = Math.max(
+                VIEWPORT_PADDING + (tooltipWidth / 2),
+                Math.min(window.innerWidth - VIEWPORT_PADDING - (tooltipWidth / 2), triggerCenter)
+            );
+            var tooltipTop = triggerRect.bottom + TOOLTIP_GAP;
+
+            if (tooltipTop + tooltipHeight + VIEWPORT_PADDING > window.innerHeight && triggerRect.top - TOOLTIP_GAP - tooltipHeight >= VIEWPORT_PADDING) {
+                tooltipTop = triggerRect.top - TOOLTIP_GAP - tooltipHeight;
+                tooltip.classList.add('sq-dataset-qa-panel__tooltip--above');
+            }
+
+            var tooltipLeftEdge = tooltipCenter - (tooltipWidth / 2);
+            var arrowLeft = Math.max(
+                16,
+                Math.min(tooltipWidth - 16, triggerCenter - tooltipLeftEdge)
+            );
+
+            content.style.left = tooltipCenter + 'px';
+            content.style.top = tooltipTop + 'px';
+            content.style.setProperty('--sq-dataset-qa-tooltip-arrow-left', arrowLeft + 'px');
+        }
+
+        function activateTooltip(tooltip) {
+            activeTooltip = tooltip;
+            window.requestAnimationFrame(function () {
+                positionTooltip(tooltip);
+            });
+        }
+
+        document.addEventListener('mouseover', function (event) {
+            var tooltip = getTooltipTarget(event.target);
+            if (tooltip) {
+                activateTooltip(tooltip);
+            }
+        }, true);
+
+        document.addEventListener('focusin', function (event) {
+            var tooltip = getTooltipTarget(event.target);
+            if (tooltip) {
+                activateTooltip(tooltip);
+            }
+        });
+
+        document.addEventListener('mouseout', function (event) {
+            var tooltip = getTooltipTarget(event.target);
+            if (!tooltip) {
+                return;
+            }
+
+            window.setTimeout(function () {
+                if (!tooltip.matches(':hover') && !tooltip.matches(':focus-within')) {
+                    clearActiveTooltip(tooltip);
+                }
+            }, 0);
+        }, true);
+
+        document.addEventListener('focusout', function (event) {
+            var tooltip = getTooltipTarget(event.target);
+            if (!tooltip) {
+                return;
+            }
+
+            window.requestAnimationFrame(function () {
+                if (!tooltip.matches(':focus-within')) {
+                    clearActiveTooltip(tooltip);
+                }
+            });
+        });
+
+        window.addEventListener('resize', function () {
+            positionTooltip(activeTooltip);
+        });
+
+        window.addEventListener('scroll', function () {
+            positionTooltip(activeTooltip);
+        }, true);
+    })();
+</script>
+
+{% set qaStatus = datasetQa.status|default('idle') %}
+{% set showTitle = showTitle is defined ? showTitle : true %}
+{% set showProgress = qaStatus in ['queued', 'running'] and datasetQa.progressPercent is not null %}
+
+<div class="sq-dataset-qa-panel">
+    <div class="sq-dataset-qa-panel__header">
+        <div>
+            {% if showTitle %}
+                <h3 class="sq-dataset-qa-panel__title">Dataset QA</h3>
+            {% endif %}
+            <div class="sq-dataset-qa-panel__meta">
+                Started:
+                <strong>{{ datasetQa.startedAt ? datasetQa.startedAt|oro_format_datetime : 'N/A' }}</strong>
+                |
+                Finished:
+                <strong>{{ datasetQa.finishedAt ? datasetQa.finishedAt|oro_format_datetime : 'N/A' }}</strong>
+                {% if datasetQa.heartbeatAt %}
+                    |
+                    Last heartbeat:
+                    <strong>{{ datasetQa.heartbeatAt|oro_format_datetime }}</strong>
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <span class="sq-dataset-qa-panel__status sq-dataset-qa-panel__status--{{ qaStatus|e('html_attr') }}">
+                {{ qaStatus }}
+            </span>
+            {% if datasetQa.reportUrl %}
+                <div style="margin-top:8px; text-align:right;">
+                    <a href="{{ datasetQa.reportUrl }}" class="no-hash" download>Download report.json</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if datasetQa.summaryCards is not empty %}
+        <div class="sq-dataset-qa-panel__cards">
+            {% for item in datasetQa.summaryCards %}
+                <div class="sq-dataset-qa-panel__card">
+                    <div class="sq-dataset-qa-panel__label-row">
+                        <span class="sq-dataset-qa-panel__card-label">{{ item.label }}</span>
+                        {{ qaUi.helpTooltip(item.help|default(null), item.label) }}
+                    </div>
+                    <span class="sq-dataset-qa-panel__card-value">{{ item.value }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% elseif datasetQa.hasReport %}
+        <div class="sq-dataset-qa-panel__message">Dataset QA report is available, but no summary metrics were extracted for display.</div>
+    {% elseif qaStatus in ['queued', 'running'] and not showProgress %}
+        <div class="sq-dataset-qa-panel__message">Dataset QA is currently running. This panel refreshes automatically while the job is active.</div>
+    {% else %}
+        <div class="sq-dataset-qa-panel__empty">No dataset QA report is available yet.</div>
+    {% endif %}
+
+    {% if showProgress %}
+        <div class="sq-dataset-qa-panel__progress">
+            <div class="sq-dataset-qa-panel__progress-head">
+                <div class="sq-dataset-qa-panel__progress-title">Progress</div>
+                <div class="sq-dataset-qa-panel__progress-value">{{ datasetQa.progressPercent }}%</div>
+            </div>
+            <div class="sq-dataset-qa-panel__progress-track">
+                <div class="sq-dataset-qa-panel__progress-fill" style="width: {{ datasetQa.progressPercent }}%;"></div>
+            </div>
+            {% if datasetQa.progressMessage %}
+                <div class="sq-dataset-qa-panel__progress-message">{{ datasetQa.progressMessage }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if datasetQa.heartbeatStale %}
+        <div class="sq-dataset-qa-panel__section">
+            <div class="sq-dataset-qa-panel__warning">The dataset QA heartbeat looks stale. The worker may be stuck or have stopped unexpectedly.</div>
+        </div>
+    {% endif %}
+
+    {% if datasetQa.errorOutput %}
+        <div class="sq-dataset-qa-panel__section">
+            <h4 class="sq-dataset-qa-panel__section-title">Latest Error</h4>
+            <div class="sq-dataset-qa-panel__error">{{ datasetQa.errorOutput }}</div>
+        </div>
+    {% endif %}
+
+    {% if datasetQa.runtimeFiles is not empty %}
+        <div class="sq-dataset-qa-panel__section">
+            <h4 class="sq-dataset-qa-panel__section-title">Runtime Logs</h4>
+            <div class="sq-dataset-qa-panel__files">
+                {% for item in datasetQa.runtimeFiles %}
+                    <div class="sq-dataset-qa-panel__file">
+                        <div><a href="{{ item.downloadUrl }}" class="no-hash" download>{{ item.label }}</a></div>
+                        {% if item.description %}
+                            <p class="sq-dataset-qa-panel__file-description">{{ item.description }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if datasetQa.subScores is not empty %}
+        <div class="sq-dataset-qa-panel__section">
+            <h4 class="sq-dataset-qa-panel__section-title">Sub-scores</h4>
+            <div class="sq-dataset-qa-panel__list">
+                {% for item in datasetQa.subScores %}
+                    <div class="sq-dataset-qa-panel__item">
+                        <div class="sq-dataset-qa-panel__label-row">
+                            <span class="sq-dataset-qa-panel__item-label">{{ item.label }}</span>
+                            {{ qaUi.helpTooltip(item.help|default(null), item.label) }}
+                        </div>
+                        <span class="sq-dataset-qa-panel__item-value">{{ item.value }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if datasetQa.sectionStatuses is not empty %}
+        <div class="sq-dataset-qa-panel__section">
+            <h4 class="sq-dataset-qa-panel__section-title">Section Status</h4>
+            <div class="sq-dataset-qa-panel__list">
+                {% for item in datasetQa.sectionStatuses %}
+                    <div class="sq-dataset-qa-panel__item">
+                        <div class="sq-dataset-qa-panel__label-row">
+                            <div class="sq-dataset-qa-panel__item-label">{{ item.name }}</div>
+                            {{ qaUi.helpTooltip(item.help|default(null), item.name) }}
+                        </div>
+                        <div class="sq-dataset-qa-panel__section-status">{{ item.status }}</div>
+                        {% if item.message %}
+                            <div class="sq-dataset-qa-panel__file-description">{{ item.message }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if datasetQa.reviewExports is not empty %}
+        <div class="sq-dataset-qa-panel__section">
+            <h4 class="sq-dataset-qa-panel__section-title">Review Exports</h4>
+            <div class="sq-dataset-qa-panel__files">
+                {% for item in datasetQa.reviewExports %}
+                    <div class="sq-dataset-qa-panel__file">
+                        <div><a href="{{ item.downloadUrl }}" class="no-hash" download>{{ item.label }}</a></div>
+                        {% if item.description %}
+                            <p class="sq-dataset-qa-panel__file-description">{{ item.description }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if datasetQa.artifacts is not empty %}
+        <div class="sq-dataset-qa-panel__section">
+            <h4 class="sq-dataset-qa-panel__section-title">Artifacts</h4>
+            <div class="sq-dataset-qa-panel__artifacts">
+                {% for item in datasetQa.artifacts %}
+                    <div class="sq-dataset-qa-panel__artifact">
+                        <div class="sq-dataset-qa-panel__label-row">
+                            <h5 class="sq-dataset-qa-panel__artifact-title">{{ item.label }}</h5>
+                            {{ qaUi.helpTooltip(item.help|default(null), item.label) }}
+                        </div>
+                        <a href="{{ item.url }}" class="no-hash" target="_blank" rel="noopener noreferrer">
+                            <img src="{{ item.url }}" alt="{{ item.label }}">
+                        </a>
+                        {% if item.description %}
+                            <p class="sq-dataset-qa-panel__artifact-description">{{ item.description }}</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if datasetQa.notes is not empty %}
+        <div class="sq-dataset-qa-panel__section">
+            <h4 class="sq-dataset-qa-panel__section-title">Notes</h4>
+            <div class="sq-dataset-qa-panel__files">
+                {% for item in datasetQa.notes %}
+                    <div class="sq-dataset-qa-panel__file">
+                        <strong>{{ item.label }}</strong>
+                        <p class="sq-dataset-qa-panel__file-description">{{ item.message }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>

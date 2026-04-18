@@ -1,0 +1,562 @@
+datagrids:
+    syntetiq-model-data-set-grid:
+        extended_entity_name: 'SyntetiQ\Bundle\DataSetBundle\Entity\DataSet'
+        source:
+            acl_resource: syntetiq_model_data_set_view
+            type: orm
+            query:
+                select:
+                    - ds.id
+                    - ds.name
+                    - ds.createdAt
+                    - COUNT(it.id) as number
+                from:
+                    - { table: SyntetiQ\Bundle\DataSetBundle\Entity\DataSet, alias: ds }
+                join:
+                    left:
+                        items:
+                            join: ds.items
+                            alias: it
+                groupBy: ds.id
+        options:
+            entityHint: syntetiq.dataset.entity_plural_label
+            entity_pagination: true
+        columns:
+            id:
+                label: Id
+            name:
+                label: syntetiq.dataset.name.label
+            number:
+                label: syntetiq.dataset.number.label
+                type: field
+                frontend_type: integer
+        sorters:
+            columns:
+                name:
+                    data_name: ds.name
+        filters:
+            columns:
+                name:
+                    type: string
+                    data_name: ds.name
+        properties:
+            view_link:
+                type: url
+                route: syntetiq_model_data_set_view
+                params: [ id ]
+            items_link:
+                type: url
+                route: syntetiq_model_data_set_items
+                params: [ id ]
+            update_link:
+                type: url
+                route: syntetiq_model_data_set_edit
+                params: [ id ]
+        actions:
+            view:
+                acl_resource: syntetiq_model_data_set_view
+                type: navigate
+                label: View
+                link: view_link
+                icon: eye
+                rowAction: true
+            update:
+                acl_resource: syntetiq_model_data_set_edit
+                type: navigate
+                label: oro.grid.action.update
+                link: update_link
+                icon: edit
+            items:
+                acl_resource: syntetiq_model_data_set_item_view
+                type: navigate
+                label: syntetiq.dataset.button.items.label
+                link: items_link
+                icon: list
+
+    syntetiq-model-recent-data-sets-grid:
+        extends: syntetiq-model-data-set-grid
+        options:
+            toolbarOptions:
+                hide: true
+                pageSize:
+                    hide: true
+                    default_per_page: 10
+        sorters:
+            default:
+                createdAt: DESC
+
+    syntetiq-model-data-set-items-galary-grid:
+        options:
+            toolbarOptions:
+                pageSize:
+                    default_per_page: 15
+                    items: [ 3, 5, 10, 15, 20, 25, 50, 100 ]
+        source:
+            #            acl_resource: syntetiq_model_model_view
+            type: orm
+            query:
+                select:
+                    - misBuild
+                    - attachment.originalFilename
+                from:
+                    - { table: SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem, alias: misBuild }
+                join:
+                    left:
+                        - { join: misBuild.image, alias: attachment }
+                where:
+                    and:
+                        - misBuild.dataSet = :dataSetId # entity with alias 'entity' sets in event listener
+            bind_parameters:
+                dataSetId:
+                    default: 0
+        columns:
+            id:
+                label: Id
+            image:
+                label: syntetiq.dataset.datasetitem.image.label
+                type: twig
+                template: '@SyntetiQDataSet/DataSetItem/Datagrid/Property/image.html.twig'
+                frontend_type: html
+                data_name: error_output
+        filters:
+            columns:
+                fileName:
+                    type: string
+                    data_name: attachment.originalFilename
+        properties:
+            update_link:
+                type: url
+                route: syntetiq_model_data_set_item_edit
+                params: [ id ]
+            delete_link:
+                type: url
+                route: syntetiq_model_data_set_item_delete
+                params: [ id ]
+        actions:
+            update:
+                acl_resource:  syntetiq_model_data_set_item_edit
+                type:          navigate
+                label:         oro.grid.action.update
+                link:          update_link
+                icon:          edit
+                rowAction:     true
+            delete:
+                acl_resource:  syntetiq_model_data_set_item_delete
+                type:          delete
+                label:         oro.grid.action.delete
+                link:          delete_link
+                icon:          trash
+
+    syntetiq-model-data-set-items-grid:
+        options:
+            toolbarOptions:
+                pageSize:
+                    default_per_page: 15
+                    items: [ 3, 5, 10, 15, 20, 25, 50, 100 ]
+        inline_editing:
+            enable: true
+            behaviour: enable_selected
+            entity_name: 'SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem'
+        mass_actions:
+            mark_ready:
+                type: ajax
+                label: syntetiq.dataset.datasetitem.mass_action.mark_ready.label
+                handler: syntetiq.datagrid.mass_action.handler.data_set_item_mark_ready
+                data_identifier: misBuild.id
+                icon: check
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.mass_action.mark_ready.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.mass_action.mark_ready.confirm_content
+                    confirm_ok: oro.ui.yes
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.mass_action.mark_ready.success
+                    error: syntetiq.dataset.datasetitem.mass_action.mark_ready.error
+            mark_not_ready:
+                type: ajax
+                label: syntetiq.dataset.datasetitem.mass_action.mark_not_ready.label
+                handler: syntetiq.datagrid.mass_action.handler.data_set_item_mark_not_ready
+                data_identifier: misBuild.id
+                icon: close
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.mass_action.mark_not_ready.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.mass_action.mark_not_ready.confirm_content
+                    confirm_ok: oro.ui.yes
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.mass_action.mark_not_ready.success
+                    error: syntetiq.dataset.datasetitem.mass_action.mark_not_ready.error
+            reset_labels:
+                type: ajax
+                label: syntetiq.dataset.datasetitem.mass_action.reset_labels.label
+                handler: syntetiq.datagrid.mass_action.handler.data_set_item_reset_labels
+                data_identifier: misBuild.id
+                icon: undo
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.mass_action.reset_labels.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.mass_action.reset_labels.confirm_content
+                    confirm_ok: oro.ui.yes
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.mass_action.reset_labels.success
+                    error: syntetiq.dataset.datasetitem.mass_action.reset_labels.error
+            add_tag:
+                type: ajax
+                frontend_type: tag-prompt-mass
+                label: syntetiq.dataset.datasetitem.mass_action.add_tag.label
+                handler: syntetiq.datagrid.mass_action.handler.data_set_item_add_tag
+                data_identifier: misBuild.id
+                icon: tag
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.mass_action.add_tag.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.mass_action.add_tag.confirm_content
+                    confirm_input_label: syntetiq.dataset.datasetitem.mass_action.add_tag.confirm_input_label
+                    confirm_input_placeholder: syntetiq.dataset.datasetitem.mass_action.add_tag.confirm_input_placeholder
+                    confirm_validation_error: syntetiq.dataset.datasetitem.mass_action.add_tag.confirm_validation_error
+                    confirm_ok: syntetiq.dataset.datasetitem.mass_action.add_tag.confirm_ok
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.mass_action.add_tag.success
+                    error: syntetiq.dataset.datasetitem.mass_action.add_tag.error
+            remove_tag:
+                type: ajax
+                frontend_type: tag-prompt-mass
+                label: syntetiq.dataset.datasetitem.mass_action.remove_tag.label
+                handler: syntetiq.datagrid.mass_action.handler.data_set_item_remove_tag
+                data_identifier: misBuild.id
+                icon: close
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.mass_action.remove_tag.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.mass_action.remove_tag.confirm_content
+                    confirm_input_label: syntetiq.dataset.datasetitem.mass_action.remove_tag.confirm_input_label
+                    confirm_input_placeholder: syntetiq.dataset.datasetitem.mass_action.remove_tag.confirm_input_placeholder
+                    confirm_validation_error: syntetiq.dataset.datasetitem.mass_action.remove_tag.confirm_validation_error
+                    confirm_ok: syntetiq.dataset.datasetitem.mass_action.remove_tag.confirm_ok
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.mass_action.remove_tag.success
+                    error: syntetiq.dataset.datasetitem.mass_action.remove_tag.error
+            rename_label:
+                type: ajax
+                frontend_type: rename-label-prompt-mass
+                label: syntetiq.dataset.datasetitem.mass_action.rename_label.label
+                handler: syntetiq.datagrid.mass_action.handler.data_set_item_rename_label
+                data_identifier: misBuild.id
+                icon: edit
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_content
+                    confirm_old_input_label: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_old_input_label
+                    confirm_old_input_placeholder: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_old_input_placeholder
+                    confirm_new_input_label: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_new_input_label
+                    confirm_new_input_placeholder: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_new_input_placeholder
+                    confirm_old_validation_error: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_old_validation_error
+                    confirm_new_validation_error: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_new_validation_error
+                    confirm_same_value_error: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_same_value_error
+                    confirm_ok: syntetiq.dataset.datasetitem.mass_action.rename_label.confirm_ok
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.mass_action.rename_label.success
+                    error: syntetiq.dataset.datasetitem.mass_action.rename_label.error
+            random_split:
+                type: ajax
+                frontend_type: split-random-mass
+                label: syntetiq.dataset.datasetitem.mass_action.random_split.label
+                handler: syntetiq.datagrid.mass_action.handler.data_set_item_random_split
+                data_identifier: misBuild.id
+                icon: random
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.mass_action.random_split.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.mass_action.random_split.confirm_content
+                    confirm_train_label: syntetiq.dataset.datasetitem.group_option.train
+                    confirm_validation_label: syntetiq.dataset.datasetitem.group_option.validation
+                    confirm_test_label: syntetiq.dataset.datasetitem.group_option.test
+                    confirm_input_suffix: syntetiq.dataset.datasetitem.mass_action.random_split.confirm_input_suffix
+                    confirm_total_label: syntetiq.dataset.datasetitem.mass_action.random_split.confirm_total_label
+                    confirm_validation_error: syntetiq.dataset.datasetitem.mass_action.random_split.confirm_validation_error
+                    confirm_ok: syntetiq.dataset.datasetitem.mass_action.random_split.confirm_ok
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.mass_action.random_split.success
+                    error: syntetiq.dataset.datasetitem.mass_action.random_split.error
+        source:
+            #            acl_resource: syntetiq_model_model_view
+            type: orm
+            query:
+                select:
+                    - misBuild
+                    # Keep the identifier explicit so Oro mass actions do not inject GROUP BY misBuild.id.
+                    - misBuild.id
+                    - misBuild.ready as ready
+                    - misBuild.updatedAt as updatedAt
+                    - attachment.originalFilename
+                from:
+                    - { table: SyntetiQ\Bundle\DataSetBundle\Entity\DataSetItem, alias: misBuild }
+                join:
+                    left:
+                        - { join: misBuild.image, alias: attachment }
+                where:
+                    and:
+                        - misBuild.dataSet = :dataSetId # entity with alias 'entity' sets in event listener
+            bind_parameters:
+                dataSetId:
+                    default: 0
+        columns:
+            id:
+                label: syntetiq.dataset.datasetitem.id.label
+            ready:
+                label: syntetiq.dataset.datasetitem.ready.label
+                frontend_type: boolean
+                data_name: ready
+            image:
+                label: syntetiq.dataset.datasetitem.image.label
+                type: twig
+                template: '@SyntetiQDataSet/DataSetItem/Datagrid/Property/image.html.twig'
+                frontend_type: html
+                data_name: error_output
+            imageMini:
+                label: syntetiq.dataset.datasetitem.grid.image_mini.label
+                type: twig
+                template: '@SyntetiQDataSet/DataSetItem/Datagrid/Property/image-mini.html.twig'
+                frontend_type: html
+                data_name: error_output
+                renderable: false
+            imageNano:
+                label: syntetiq.dataset.datasetitem.grid.image_nano.label
+                type: twig
+                template: '@SyntetiQDataSet/DataSetItem/Datagrid/Property/image-nano.html.twig'
+                frontend_type: html
+                data_name: error_output
+                renderable: false
+            objects:
+                label: syntetiq.dataset.datasetitem.grid.objects.label
+                type: twig
+                template: '@SyntetiQDataSet/DataSetItem/Datagrid/Property/objects.html.twig'
+                frontend_type: html
+                data_name: objects
+            imgWidth:
+                label: syntetiq.dataset.datasetitem.img_width.label
+                data_name: imgWidth
+            imgHeight:
+                label: syntetiq.dataset.datasetitem.img_height.label
+                data_name: imgHeight
+            fileName:
+                label: syntetiq.dataset.datasetitem.grid.file_name.label
+                data_name: originalFilename
+            group:
+                label: syntetiq.dataset.datasetitem.group.label
+                type: field
+                frontend_type: select
+                data_name: group
+                choices:
+                    syntetiq.dataset.datasetitem.group_option.train: train
+                    syntetiq.dataset.datasetitem.group_option.validation: val
+                    syntetiq.dataset.datasetitem.group_option.test: test
+                inline_editing:
+                    enable: true
+            tag:
+                label: syntetiq.dataset.datasetitem.grid.tags.label
+                data_name: tag
+                inline_editing:
+                    enable: true
+                    editor:
+                        view: syntetiqdataset/js/app/views/editor/dataset-item-tags-editor-view
+                    save_api_accessor:
+                        route: syntetiq_model_data_set_item_inline_update_tags
+                        http_method: PATCH
+                    autocomplete_api_accessor:
+                        class: oroui/js/tools/search-api-accessor
+                        search_handler_name: data_set_item_tags
+                        label_field_name: name
+                        query_parameter_names:
+                            - dataSetId
+            sourceType:
+                label: syntetiq.dataset.datasetitem.source_type.label
+                data_name: sourceType
+            updatedAt:
+                label: syntetiq.dataset.datasetitem.grid.modified_at.label
+                frontend_type: datetime
+                data_name: updatedAt
+        filters:
+            columns:
+                fileName:
+                    type: string
+                    data_name: attachment.originalFilename
+                group:
+                    type: choice
+                    data_name: misBuild.group
+                    options:
+                        populate_default: All
+                        field_options:
+                            choices:
+                                syntetiq.dataset.datasetitem.group_option.train: train
+                                syntetiq.dataset.datasetitem.group_option.validation: val
+                                syntetiq.dataset.datasetitem.group_option.test: test
+                ready:
+                    type: boolean
+                    data_name: misBuild.ready
+                tag:
+                    type: string
+                    data_name: misBuild.id
+                sourceType:
+                    type: choice
+                    data_name: misBuild.sourceType
+                    options:
+                        populate_default: All
+                        field_options:
+                            choices:
+                                syntetiq.dataset.datasetitem.source_type_option.manual: manual
+                                syntetiq.dataset.datasetitem.source_type_option.omniverse: omniverse
+                labels:
+                    type: dataset-item-labels
+                    data_name: misBuild.id
+                    options:
+                        field_options:
+                            choices: [ ]
+                            multiple: true
+                            translatable_options: false
+                bboxArea:
+                    type: dataset-item-bbox-area
+                    label: syntetiq.dataset.datasetitem.grid.bbox_area.label
+                    data_name: misBuild.id
+        sorters:
+            columns:
+                id:
+                    data_name: misBuild.id
+                fileName:
+                    data_name: attachment.originalFilename
+                ready:
+                    data_name: misBuild.ready
+                updatedAt:
+                    data_name: misBuild.updatedAt
+                imgWidth:
+                    data_name: misBuild.imgWidth
+                imgHeight:
+                    data_name: misBuild.imgHeight
+            default:
+                id: DESC
+        properties:
+            update_link:
+                type: url
+                route: syntetiq_model_data_set_item_edit
+                params: [ id ]
+            ready_link:
+                type: url
+                route: syntetiq_model_data_set_item_mark_ready
+                params: [ id ]
+            not_ready_link:
+                type: url
+                route: syntetiq_model_data_set_item_mark_not_ready
+                params: [ id ]
+            reset_labels_link:
+                type: url
+                route: syntetiq_model_data_set_item_reset_labels
+                params: [ id ]
+            delete_link:
+                type: url
+                route: syntetiq_model_data_set_item_delete
+                params: [ id ]
+        actions:
+            update:
+                acl_resource:  syntetiq_model_data_set_item_edit
+                type:          navigate
+                label:         oro.grid.action.update
+                link:          update_link
+                icon:          edit
+                rowAction:     true
+            mark_ready:
+                acl_resource: syntetiq_model_data_set_item_edit
+                type: ajax
+                label: syntetiq.dataset.datasetitem.mass_action.mark_ready.label
+                link: ready_link
+                icon: check
+                messages:
+                    success: syntetiq.dataset.datasetitem.row_action.mark_ready.success
+                    error: syntetiq.dataset.datasetitem.row_action.mark_ready.error
+            mark_not_ready:
+                acl_resource: syntetiq_model_data_set_item_edit
+                type: ajax
+                label: syntetiq.dataset.datasetitem.mass_action.mark_not_ready.label
+                link: not_ready_link
+                icon: close
+                messages:
+                    success: syntetiq.dataset.datasetitem.row_action.mark_not_ready.success
+                    error: syntetiq.dataset.datasetitem.row_action.mark_not_ready.error
+            reset_labels:
+                acl_resource: syntetiq_model_data_set_item_edit
+                type: ajax
+                label: syntetiq.dataset.datasetitem.mass_action.reset_labels.label
+                link: reset_labels_link
+                icon: undo
+                confirmation: true
+                messages:
+                    confirm_title: syntetiq.dataset.datasetitem.row_action.reset_labels.confirm_title
+                    confirm_content: syntetiq.dataset.datasetitem.row_action.reset_labels.confirm_content
+                    confirm_ok: oro.ui.yes
+                    confirm_cancel: oro.ui.cancel
+                    success: syntetiq.dataset.datasetitem.row_action.reset_labels.success
+                    error: syntetiq.dataset.datasetitem.row_action.reset_labels.error
+            delete:
+                acl_resource:  syntetiq_model_data_set_item_delete
+                type:          delete
+                label:         oro.grid.action.delete
+                link:          delete_link
+                icon:          trash
+        action_configuration: ['@syntetiq.event_listener.data_set_items_datagrid', 'getActionConfiguration']
+
+    syntetiq-model-data-set-export-grid:
+        source:
+            acl_resource: syntetiq_model_data_set_export_view
+            type: orm
+            query:
+                select:
+                    - dataSetExport
+                from:
+                    - { table: SyntetiQ\Bundle\DataSetBundle\Entity\DataSetExport, alias: dataSetExport }
+                where:
+                    and:
+                        - dataSetExport.dataSetId = :dataSetId # filter by dataset ID for view page
+            bind_parameters:
+                dataSetId:
+                    default: 0
+        columns:
+            id:
+                label: syntetiq.dataset.datasetexport.id.label
+            createdAt:
+                label: oro.ui.created_at
+                frontend_type: datetime
+            startedAt:
+                label: syntetiq.dataset.datasetexport.started_at.label
+                frontend_type: datetime
+            finishedAt:
+                label: syntetiq.dataset.datasetexport.finished_at.label
+                frontend_type: datetime
+            resultFile:
+                label: syntetiq.dataset.datasetexport.result_file.label
+                type: twig
+                template: '@SyntetiQDataSet/DataSetExport/Datagrid/Property/resultFile.html.twig'
+                frontend_type: html
+                data_name: result_file
+            resultFileSize:
+                label: oro.attachment.file.file_size.label
+                type: twig
+                template: '@SyntetiQDataSet/DataSetExport/Datagrid/Property/resultFileSize.html.twig'
+                frontend_type: html
+        properties:
+            delete_link:
+                type: url
+                route: syntetiq_model_data_set_export_delete
+                params: [ id ]
+        actions:
+            delete:
+                acl_resource: syntetiq_model_data_set_export_delete
+                type: delete
+                label: oro.grid.action.delete
+                link: delete_link
+                icon: remove
+        sorters:
+            columns:
+                id:
+                    data_name: dataSetExport.id
+            default:
+                id: DESC

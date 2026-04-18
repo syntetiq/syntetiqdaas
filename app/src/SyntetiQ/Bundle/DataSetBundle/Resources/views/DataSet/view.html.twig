@@ -1,0 +1,392 @@
+{% extends '@OroUI/actions/view.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+{% import '@OroDataGrid/macros.html.twig' as dataGrid %}
+
+{% block pageHeader %}
+    {% set breadcrumbs = {
+        'entity': entity,
+        'indexPath': path('syntetiq_model_data_set_index'),
+        'indexLabel': 'syntetiq.dataset.page.title.label'|trans,
+        'entityTitle': 'syntetiq.navigation.dataset.view'|trans({
+            '%identifier%': entity.id|default('N/A'|trans)
+        })
+    } %}
+
+    {{ parent() }}
+{% endblock pageHeader %}
+
+{% block navButtons %}
+    <div class="btn-group">
+        {{ UI.button({
+            'path': path('syntetiq_model_data_set_gallery', { id: entity.id }),
+            'title': 'syntetiq.dataset.button.gallery.label'|trans,
+            'label': 'syntetiq.dataset.button.gallery.label'|trans,
+            'iCss': 'fa-th-large'
+        }) }}
+    </div>
+
+    <script type="text/javascript">
+        loadModules(['jquery', 'orotranslation/js/translator', 'oroui/js/messenger'], function($, __, messenger) {
+            $(function() {
+                const pollInterval = 3000;
+                const progressUrl = "{{ path('syntetiq_data_set_import_progress', { id: entity.id }) }}";
+                const $container = $('.sq-import-progress');
+
+                if ($container.length === 0) return;
+
+                function updateProgress() {
+                    $.get(progressUrl, function(imports) {
+                        if (imports.length === 0) {
+                            $container.empty();
+                            return;
+                        }
+
+                        let html = '';
+                        let hasActive = false;
+
+                        imports.forEach(function(job) {
+                            const percent = Math.round((job.progress || 0) * 100);
+                            const status = job.status;
+                            let statusLabel = 'QUEUED';
+                            let barClass = 'sq-import-progress__bar';
+
+                            if (status.includes('success')) {
+                                statusLabel = 'COMPLETE';
+                                barClass += ' sq-import-progress__bar--complete';
+                            } else if (status.includes('failed') || status.includes('cancelled')) {
+                                statusLabel = 'FAILED';
+                                barClass += ' sq-import-progress__bar--failed';
+                            } else if (status.includes('running')) {
+                                statusLabel = 'RUNNING';
+                                hasActive = true;
+                            } else {
+                                hasActive = true;
+                            }
+
+                            html += `
+                                <div class="sq-import-progress__item">
+                                    <span class="sq-import-progress__status sq-import-progress__status--${statusLabel.toLowerCase()}">
+                                        ${statusLabel}
+                                    </span>
+                                    <div class="sq-import-progress__bar-wrap">
+                                        <div class="${barClass}" style="width: ${percent}%"></div>
+                                    </div>
+                                    <span class="sq-import-progress__counts">${percent}%</span>
+                                    ${job.itemCount ? `<span class="sq-import-progress__counts">${job.itemCount} items</span>` : ''}
+                                    ${job.fileName ? `<span class="sq-import-progress__file" title="${job.fileName}">${job.fileName}</span>` : ''}
+                                    ${job.startedAt ? `<span class="sq-import-progress__time">${job.startedAt}</span>` : ''}
+                                </div>
+                            `;
+                        });
+
+                        $container.html(html);
+
+                        if (hasActive) {
+                            setTimeout(updateProgress, pollInterval);
+                        }
+                    });
+                }
+
+                // Initial poll check if there are running items
+                if ($container.find('.sq-import-progress__status--running, .sq-import-progress__status--queued').length > 0) {
+                    setTimeout(updateProgress, pollInterval);
+                }
+            });
+        });
+    </script>
+
+    <div class="btn-group">
+        {{ UI.button({
+            'path': path('syntetiq_model_data_set_items', { id: entity.id }),
+            'title': 'syntetiq.dataset.button.items.label'|trans,
+            'label': 'syntetiq.dataset.button.items.label'|trans,
+            'iCss': 'fa-table'
+        }) }}
+    </div>
+
+    {% if is_granted('EDIT', entity) %}
+        {{ UI.editButton({
+            'path' : path('syntetiq_model_data_set_edit', { 'id': entity.id }),
+            'title': 'syntetiq.dataset.button.edit.label'|trans,
+            'label':'syntetiq.dataset.button.edit.label'|trans
+        }) }}
+    {% endif %}
+
+    {% if is_granted('DELETE', entity) %}
+        {{ UI.deleteButton({
+            'dataUrl': path('syntetiq_model_data_set_delete', { id: entity.id }),
+            'dataRedirect': path('syntetiq_model_data_set_index'),
+            'aCss': 'no-hash remove-button',
+            'id': 'btn-remove-data-set',
+            'dataId': entity.id,
+            'entity_label': 'syntetiq.dataset.entity_label'|trans
+        }) }}
+    {% endif %}
+{% endblock %}
+
+{% block content_data %}
+    {% set totalItems = summary.totalItems|default(0) %}
+    {% set trainItems = summary.trainItems|default(0) %}
+    {% set validateItems = summary.validateItems|default(0) %}
+    {% set testItems = summary.testItems|default(0) %}
+    {% set readyItems = summary.readyItems|default(0) %}
+    {% set assignedItems = trainItems + validateItems + testItems %}
+    {% set unassignedItems = totalItems > assignedItems ? totalItems - assignedItems : 0 %}
+    {% set trainPercent = totalItems > 0 ? ((trainItems / totalItems) * 100)|round(1) : 0 %}
+    {% set validatePercent = totalItems > 0 ? ((validateItems / totalItems) * 100)|round(1) : 0 %}
+    {% set testPercent = totalItems > 0 ? ((testItems / totalItems) * 100)|round(1) : 0 %}
+    {% set unassignedPercent = totalItems > 0 ? ((unassignedItems / totalItems) * 100)|round(1) : 0 %}
+
+    {% set itemsSummaryHtml %}
+        <style>
+            .sq-dataset-items-summary {
+                padding: 8px 10px;
+                border: 1px solid #dbe4ee;
+                border-radius: 6px;
+                background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8);
+            }
+
+            .sq-dataset-items-summary__head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .sq-dataset-items-summary__total {
+                display: flex;
+                align-items: baseline;
+                gap: 6px;
+            }
+
+            .sq-dataset-items-summary__total-value {
+                font-size: 22px;
+                line-height: 1;
+                font-weight: 700;
+                color: #1e293b;
+            }
+
+            .sq-dataset-items-summary__total-label {
+                font-size: 12px;
+                font-weight: 600;
+                color: #475569;
+            }
+
+            .sq-dataset-items-summary__badges {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+
+            .sq-dataset-items-summary__badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 2px 8px;
+                border-radius: 999px;
+                background: #f1f5f9;
+                border: 1px solid #dbe4ee;
+                font-size: 11px;
+                line-height: 1.3;
+                color: #64748b;
+            }
+
+            .sq-dataset-items-summary__badge strong {
+                color: #1e293b;
+            }
+
+            .sq-dataset-items-summary__bar {
+                display: flex;
+                width: 100%;
+                height: 10px;
+                border-radius: 999px;
+                overflow: hidden;
+                background: #e2e8f0;
+                box-shadow: inset 0 1px 2px rgba(15, 23, 42, .08);
+                margin-top: 6px;
+            }
+
+            .sq-dataset-items-summary__bar-segment {
+                height: 100%;
+                min-width: 0;
+            }
+
+            .sq-dataset-items-summary__bar-segment--train {
+                background: #0284c7;
+            }
+
+            .sq-dataset-items-summary__bar-segment--validate {
+                background: #ca8a04;
+            }
+
+            .sq-dataset-items-summary__bar-segment--test {
+                background: #ea580c;
+            }
+
+            .sq-dataset-items-summary__bar-segment--unassigned {
+                background: #94a3b8;
+            }
+
+            .sq-dataset-items-summary__legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-top: 6px;
+            }
+
+            .sq-dataset-items-summary__legend-item {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                min-width: 0;
+                padding: 2px 7px;
+                border-radius: 999px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+            }
+
+            .sq-dataset-items-summary__legend-dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                flex: 0 0 7px;
+            }
+
+            .sq-dataset-items-summary__legend-dot--train {
+                background: #0284c7;
+            }
+
+            .sq-dataset-items-summary__legend-dot--validate {
+                background: #ca8a04;
+            }
+
+            .sq-dataset-items-summary__legend-dot--test {
+                background: #ea580c;
+            }
+
+            .sq-dataset-items-summary__legend-dot--unassigned {
+                background: #94a3b8;
+            }
+
+            .sq-dataset-items-summary__legend-label {
+                font-size: 11px;
+                font-weight: 600;
+                color: #334155;
+            }
+
+            .sq-dataset-items-summary__legend-value {
+                font-size: 11px;
+                color: #64748b;
+                white-space: nowrap;
+            }
+        </style>
+
+        <div class="sq-dataset-items-summary">
+            <div class="sq-dataset-items-summary__head">
+                <div class="sq-dataset-items-summary__total">
+                    <span class="sq-dataset-items-summary__total-value">{{ totalItems }}</span>
+                    <span class="sq-dataset-items-summary__total-label">items</span>
+                </div>
+                <div class="sq-dataset-items-summary__badges">
+                    <span class="sq-dataset-items-summary__badge">Assigned <strong>{{ assignedItems }}</strong></span>
+                    <span class="sq-dataset-items-summary__badge">Ready <strong>{{ readyItems }}</strong></span>
+                </div>
+            </div>
+
+            <div class="sq-dataset-items-summary__bar">
+                {% if trainItems > 0 %}
+                    <div class="sq-dataset-items-summary__bar-segment sq-dataset-items-summary__bar-segment--train" style="width: {{ trainPercent }}%;"></div>
+                {% endif %}
+                {% if validateItems > 0 %}
+                    <div class="sq-dataset-items-summary__bar-segment sq-dataset-items-summary__bar-segment--validate" style="width: {{ validatePercent }}%;"></div>
+                {% endif %}
+                {% if testItems > 0 %}
+                    <div class="sq-dataset-items-summary__bar-segment sq-dataset-items-summary__bar-segment--test" style="width: {{ testPercent }}%;"></div>
+                {% endif %}
+                {% if unassignedItems > 0 %}
+                    <div class="sq-dataset-items-summary__bar-segment sq-dataset-items-summary__bar-segment--unassigned" style="width: {{ unassignedPercent }}%;"></div>
+                {% endif %}
+            </div>
+
+            <div class="sq-dataset-items-summary__legend">
+                <div class="sq-dataset-items-summary__legend-item">
+                    <span class="sq-dataset-items-summary__legend-dot sq-dataset-items-summary__legend-dot--train"></span>
+                    <span class="sq-dataset-items-summary__legend-label">Train</span>
+                    <span class="sq-dataset-items-summary__legend-value">{{ trainItems }} • {{ trainPercent }}%</span>
+                </div>
+                <div class="sq-dataset-items-summary__legend-item">
+                    <span class="sq-dataset-items-summary__legend-dot sq-dataset-items-summary__legend-dot--validate"></span>
+                    <span class="sq-dataset-items-summary__legend-label">Validate</span>
+                    <span class="sq-dataset-items-summary__legend-value">{{ validateItems }} • {{ validatePercent }}%</span>
+                </div>
+                <div class="sq-dataset-items-summary__legend-item">
+                    <span class="sq-dataset-items-summary__legend-dot sq-dataset-items-summary__legend-dot--test"></span>
+                    <span class="sq-dataset-items-summary__legend-label">Test</span>
+                    <span class="sq-dataset-items-summary__legend-value">{{ testItems }} • {{ testPercent }}%</span>
+                </div>
+                {% if unassignedItems > 0 %}
+                    <div class="sq-dataset-items-summary__legend-item">
+                        <span class="sq-dataset-items-summary__legend-dot sq-dataset-items-summary__legend-dot--unassigned"></span>
+                        <span class="sq-dataset-items-summary__legend-label">Unassigned</span>
+                        <span class="sq-dataset-items-summary__legend-value">{{ unassignedItems }} • {{ unassignedPercent }}%</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endset %}
+
+    {% set modelsHtml %}
+        {% if summary.models is not empty %}
+            {% for model in summary.models %}
+                <a href="{{ path('syntetiq_model_model_view', { id: model.id }) }}">{{ model.name|default('Model #' ~ model.id) }}</a>{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        {% else %}
+            N/A
+        {% endif %}
+    {% endset %}
+
+    {% set generalInfo %}
+        {{ UI.renderHtmlProperty('syntetiq.dataset.name.label'|trans, entity.name) }}
+        {{ UI.renderHtmlProperty('Items', itemsSummaryHtml) }}
+        {{ UI.renderProperty('Labels', summary.labels is not empty ? summary.labels|join(', ') : 'N/A') }}
+        {{ UI.renderProperty('Tags', summary.tags is not empty ? summary.tags|join(', ') : 'N/A') }}
+        {{ UI.renderHtmlProperty('Models', modelsHtml) }}
+    {% endset %}
+
+    {% set dataSetQualityBlock %}
+        {% include '@SyntetiQDataSet/DatasetQa/panel.html.twig' with {datasetQa: datasetQa, showTitle: false} %}
+    {% endset %}
+
+    {% set importProgressBlock %}
+        {% if imports is not empty %}
+            {% include '@SyntetiQDataSet/DataSet/import_progress.html.twig' with {imports: imports, entity: entity} %}
+        {% endif %}
+    {% endset %}
+
+    {% set dataBlocks = [{
+        'title': 'syntetiq.dataset.sections.general'|trans,
+        'subblocks': [{'data' : [generalInfo]}]
+    }] %}
+
+    {% if imports is not empty %}
+        {% set dataBlocks = dataBlocks|merge([{
+            'title': 'Import Progress',
+            'subblocks': [{'data' : [importProgressBlock]}]
+        }]) %}
+    {% endif %}
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'Dataset Quality',
+        'subblocks': [{'data' : [dataSetQualityBlock]}]
+    }, {
+        'title': 'Export History',
+        'subblocks': [{'data' : [dataGrid.renderGrid('syntetiq-model-data-set-export-grid', {dataSetId: entity.id}) ]}]
+    }]) %}
+
+    {% set id = 'model-data-set-view' %}
+    {% set data = {'dataBlocks': dataBlocks} %}
+
+    {{ parent() }}
+{% endblock content_data %}

@@ -1,0 +1,3 @@
+dynamic-imports:
+    commons:
+        - syntetiqomniverse/js/app/views/include-labels-input-view

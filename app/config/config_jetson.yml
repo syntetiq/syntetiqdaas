@@ -1,0 +1,77 @@
+imports:
+    - { resource: config.yml }
+
+parameters:
+    main_log_channels: []
+
+framework:
+    router:   { resource: "%kernel.project_dir%/config/routing_dev.yml" }
+    profiler: { only_exceptions: false }
+    ide: phpstorm
+#    mailer:
+#        envelope:
+#            recipients: ['me@example.com']
+
+web_profiler:
+    toolbar: false
+    excluded_ajax_paths: '^/((index(_[\w]+)|app(_[\w]+)?)\.php/)?(_wdt|bundles)'
+    intercept_redirects: false
+
+monolog:
+    handlers:
+        main:
+            type:      stream
+            path:      "%kernel.logs_dir%/%kernel.environment%.log"
+            level:     info
+            channels:  '%main_log_channels%' # The channels configuration only works for top-level handlers
+
+oro_message_queue:
+    client:
+        traceable_producer: true
+
+synteti_q_model:
+    environments:
+        - system
+        - conda
+    engines:
+        ultralytics:
+            name: Ultralytics
+            python_version: '3.10.12'
+            dataset_format: yolo
+            dataset_split: train-valid-test
+            dataset_box_format: xyxy
+            models:
+                - 'yolo26n'
+                - 'yolo26s'
+                - 'yolo26m'
+                - 'yolo26l'
+                - 'yolo26x'
+                - 'yolo11n'
+                - 'yolo11s'
+                - 'yolo11m'
+                - 'yolo11l'
+                - 'yolo11x'
+                - 'yolo8n'
+                - 'yolo8s'
+                - 'yolo8m'
+                - 'yolo8l'
+                - 'yolo8x'
+        pytorch_ssd_jetson:
+            name: Pytorch SSD Jetson
+            python_version: '3.10.12'
+            dataset_format: pascal-voc
+            dataset_split: train-valid-test
+            dataset_box_format: xyxy
+            models:
+                - 'mb1-ssd'
+                - 'mb1-ssd-lite'
+                - 'mb2-ssd-lite'
+                - 'vgg16-ssd'
+        test:
+            name: Test
+            python_version: '3.10.12'
+            dataset_format: yolo
+            dataset_split: train-valid-test
+            dataset_box_format: xyxy
+            models:
+                - test

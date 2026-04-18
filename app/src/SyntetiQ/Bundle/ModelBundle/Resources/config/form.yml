@@ -1,0 +1,30 @@
+services:
+    syntetiq.model.form.type.model:
+        class: SyntetiQ\Bundle\ModelBundle\Form\Type\ModelType
+        tags:
+            - { name: form.type, alias: syntetiq_model_type_model }
+
+    syntetiq.model.form.type.model_build:
+        class: SyntetiQ\Bundle\ModelBundle\Form\Type\ModelBuildType
+        arguments:
+            - '%syntetiq_model.environments%'
+            - '%syntetiq_model.engines%'
+            - '@SyntetiQ\Bundle\ModelBundle\Dataset\ModelBuildDatasetItemProvider'
+        tags:
+            - { name: form.type, alias: syntetiq_model_type_model_build }
+
+    syntetiq.model.form.model:
+        class: Symfony\Component\Form\Form
+        factory: ['@form.factory', 'createNamed']
+        arguments: ["syntetiq_model_model", "syntetiq_model_model", null]
+
+    # Model form handlers
+    syntetiq.model.form.handler.model:
+        class: SyntetiQ\Bundle\ModelBundle\Form\Handler\ModelHandler
+        arguments:
+            - '@doctrine.orm.entity_manager'
+
+
+
+
+

@@ -1,0 +1,41 @@
+SyntetiQ\Bundle\OmniverseBundle\Entity\GenerateImagesRequest:
+    properties:
+        frames:
+            - NotBlank: ~
+            - Type: integer
+            - Range:
+                min: 1
+        width:
+            - NotBlank: ~
+            - Type: integer
+            - Range:
+                min: 1
+        height:
+            - NotBlank: ~
+            - Type: integer
+            - Range:
+                min: 1
+        focalLength:
+            - NotBlank: ~
+            - Type: integer
+        labelName:
+            - NotBlank: ~
+            - Type: string
+            - Length:
+                max: 255
+        cubeSize:
+            - NotBlank: ~
+            - Type: float
+        tmpRoot:
+            - NotBlank: ~
+            - Type: string
+            - Length:
+                max: 255
+        jpegQuality:
+            - NotBlank: ~
+            - Type: integer
+            - Range:
+                min: 0
+                max: 100
+        dataSet:
+            - NotBlank: ~

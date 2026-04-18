@@ -1,0 +1,6 @@
+SyntetiQ\Bundle\DataSetBundle\Entity\DataSet:
+  properties:
+    name:
+      - NotBlank: ~
+      - Length:
+          max: 255

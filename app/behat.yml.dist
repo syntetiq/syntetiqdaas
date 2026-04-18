@@ -1,0 +1,18 @@
+imports:
+  - ./vendor/oro/platform/src/Oro/Bundle/TestFrameworkBundle/Resources/config/behat.yml.dist
+
+default: &default
+    gherkin:
+        filters:
+            tags: ~@not-automated&&~@skip
+    extensions:
+        Behat\MinkExtension:
+            base_url: 'http://dev-platform.local/'
+        FriendsOfBehat\SymfonyExtension:
+            kernel:
+              debug: false
+              class: AppKernel
+        Oro\Bundle\TestFrameworkBundle\Behat\ServiceContainer\OroTestFrameworkExtension: ~
+
+chromedriver:
+    <<: *default

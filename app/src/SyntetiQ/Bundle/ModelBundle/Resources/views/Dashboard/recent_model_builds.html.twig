@@ -1,0 +1,6 @@
+{% extends '@OroDashboard/Dashboard/widget.html.twig' %}
+{% import '@OroDataGrid/macros.html.twig' as dataGrid %}
+
+{% block content %}
+    {{ dataGrid.renderGrid('syntetiq-model-recent-model-builds-grid') }}
+{% endblock %}

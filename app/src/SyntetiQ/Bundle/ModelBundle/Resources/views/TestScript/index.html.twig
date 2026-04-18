@@ -1,0 +1,17 @@
+{% extends '@OroUI/actions/index.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+{% block pageHeader %}
+    <h3>Test Script Page</h3>
+{% endblock pageHeader %}
+
+{% block content %}
+    <div class="row-fluid model-test-script-shell" {{ UI.renderPageComponentAttributes({
+        view: 'syntetiqmodel/js/app/views/test-script-view'
+    }) }}>
+        <div class="span12">
+            <p>Scratch page for browser-side experiments in ModelBundle.</p>
+            <div class="test-script-widget"></div>
+        </div>
+    </div>
+{% endblock content %}

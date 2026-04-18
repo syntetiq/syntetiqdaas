@@ -1,0 +1,10 @@
+SyntetiQ\Bundle\ModelBundle\Entity\Model:
+  properties:
+    name:
+      - NotBlank: ~
+      - Length:
+          max: 255
+
+SyntetiQ\Bundle\ModelBundle\Entity\ModelBuild:
+  constraints:
+    - SyntetiQ\Bundle\ModelBundle\Validator\Constraints\HasDatasetSplitGroups: ~

@@ -1,0 +1,44 @@
+{% extends '@OroDashboard/Dashboard/widget.html.twig' %}
+{% import '@OroDataGrid/macros.html.twig' as dataGrid %}
+
+{% block content %}
+    {{ dataGrid.renderGrid('syntetiq-model-recent-models-grid') }}
+{% endblock %}
+
+{% block actions %}
+    {% set actions = [
+        {
+            'url': path('syntetiq_model_model_index'),
+            'type': 'link',
+            'label': 'syntetiq.model.view_all.label'|trans,
+        },
+        {
+            'url': '#',
+            'type': 'button',
+            'class': 'btn-primary',
+            'label': 'syntetiq.model.button.model.add.label'|trans,
+            'icon': 'plus',
+            'data': {
+                'url': path('syntetiq_model_model_create'),
+                'page-component-module': 'oroui/js/app/components/widget-component',
+                'page-component-options': {
+                    'type': 'dialog',
+                    'multiple': false,
+                    'createOnEvent': 'click',
+                    'reload-grid-name': 'syntetiq-model-recent-models-grid',
+                    'options': {
+                        'alias': 'model-dialog',
+                        'dialogOptions': {
+                            'title': 'syntetiq.model.button.model.add.label'|trans,
+                            'allowMaximize': true,
+                            'allowMinimize': true,
+                            'modal': true,
+                            'width': 600
+                        }
+                    }
+                }|json_encode
+            }
+        }
+    ] %}
+    {{ parent() }}
+{% endblock %}

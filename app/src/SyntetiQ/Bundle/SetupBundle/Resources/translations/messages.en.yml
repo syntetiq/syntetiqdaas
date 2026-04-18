@@ -1,0 +1,17 @@
+syntetiq:
+    setup:
+        acl:
+            category:
+                sq_entities:
+                    label: SQ Entities
+
+Dashboard: Dashboard
+Recent Data Sets: Recent Data Sets
+This widget displays the most recent data sets: This widget displays the most recent data sets
+Recent Models: Recent Models
+This widget displays the most recent models: This widget displays the most recent models
+Recent Model Builds: Recent Model Builds
+This widget displays the most recent model builds: This widget displays the most recent model builds
+View: View
+Test Script: Test Script
+Id: Id

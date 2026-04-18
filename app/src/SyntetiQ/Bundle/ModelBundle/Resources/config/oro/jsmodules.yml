@@ -1,0 +1,6 @@
+dynamic-imports:
+    commons:
+        - syntetiqmodel/js/app/views/model-pretrained-upload
+        - syntetiqmodel/js/app/views/model-build-form-view
+        - syntetiqmodel/js/app/views/model-build-tensorboard-view
+        - syntetiqmodel/js/app/views/test-script-view

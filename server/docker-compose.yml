@@ -1,0 +1,337 @@
+# version: '3.8'
+name: ${COMPOSE_PROJECT_NAME:-sq}
+volumes:
+    phplog:
+        driver: local
+    redis_data:
+        driver: local
+networks:
+    syntetiq:
+        driver: bridge
+    syntetiq-docker:
+        external: true
+services:
+    syntetiq-phpfpm:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-phpfpm
+        profiles:
+            - "base"
+            - "jetson"
+            - "rtx"
+        expose:
+            - ${XDEBUG_PORT}
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        build:
+            context: ./php-fpm/
+            dockerfile: Dockerfile
+        depends_on:
+            - syntetiq-pgsql
+            - syntetiq-redis
+        volumes:
+            - phplog:/var/log/php-fpm                       # store log files for debug mistakes
+            - ../app:/data                                  # dir with SyntetiQ project files
+            - ./php-fpm/conf/php.ini:/usr/local/etc/php/php.ini:ro
+        working_dir: /data
+        env_file: .env
+        environment:
+            XDEBUG_CONFIG: remote_enable=On remote_host=${XDEBUG_HOST} remote_port=${XDEBUG_PORT}
+            PHP_IDE_CONFIG: serverName=syntetiq.docker.localhost
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+
+    syntetiq-nginx:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-nginx
+        profiles:
+            - "base"
+            - "jetson"
+            - "rtx"
+        image: nginx:stable
+        environment:
+            NGINX_PHPCLI_UPSTREAM: "${PHPCLI_CONTAINER:?Please set PHPCLI_CONTAINER}:8080"
+            NGINX_SERVER_NAME: "${U_HOST:-syntetiq.docker.localhost}"
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ../app:/data:cached
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf:cached
+            - ./nginx/templates:/etc/nginx/templates:ro
+            - ./nginx/servers-https:/etc/nginx/servers
+            - ./nginx/ssl:/etc/ssl/private                     # Share hosts certificates
+        working_dir: /etc/nginx/conf.d
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        depends_on:
+            - syntetiq-phpfpm
+
+    syntetiq-tensorboard:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-tensorboard
+        profiles:
+            - "base"
+            - "jetson"
+            - "rtx"
+        build:
+            context: ./tensorboard/
+            dockerfile: Dockerfile
+        volumes:
+            - ../model/tensorboard:/data:cached
+        working_dir: /data
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        depends_on:
+            - syntetiq-phpfpm
+
+    syntetiq-redis:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-redis
+        profiles:
+            - "base"
+            - "jetson"
+            - "rtx"
+        image: redis:latest
+        volumes:
+            - redis_data:/data
+
+    syntetiq-pgsql:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-pgsql
+        profiles:
+            - "base"
+            - "jetson"
+            - "rtx"
+        image: postgres:16.0-alpine3.18
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_DB: ${DB_NAME}
+            POSTGRES_PASSWORD: ${DB_PASS}
+            POSTGRES_ROOT_PASSWORD: ${DB_ROOT_PASS}
+            PGDATA: /var/lib/postgresql/data/pgdata
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./postgres/data:/var/lib/postgresql/data
+        healthcheck:
+            test: "pg_isready -U$${POSTGRES_USER} -d$${POSTGRES_DB}"
+            interval: 5s
+            timeout: 30s
+            start_period: 40s
+        restart: on-failure
+######
+# Worker containers
+######
+    syntetiq-phpcli:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-phpcli
+        profiles:
+            - "nogpu"
+        expose:
+            - ${XDEBUG_PORT}
+            - 8080
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        build:
+            context: ./php-cli/
+            dockerfile: Dockerfile
+        depends_on:
+            - syntetiq-pgsql
+            - syntetiq-redis
+        volumes:
+            - phplog:/var/log/php-cli                       # store log files for debug mistakes
+            - ../app:/data                                  # dir with SyntetiQ project files
+            - ../model:/model
+            - ./php-cli/start.sh:/var/www/start.sh
+            - ./php-cli/supervisor/conf.d:/etc/supervisor/conf.d
+            - ./php-cli/composer:/var/www/.composer/:delegated      # cache composer for speedup install
+        working_dir: /data
+        env_file: .env
+        environment:
+            XDEBUG_CONFIG: remote_enable=On remote_host=${XDEBUG_HOST} remote_port=${XDEBUG_PORT}
+            STORAGE_EMULATOR_HOST: http://syntetiq-gcs-emulator:4443
+            SQ_MODEL_ROOT: /model
+        tty: true
+        stdin_open: true
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        oom_score_adj: -1000
+        ipc: "host"
+        command: /var/www/start.sh
+
+    syntetiq-rtx-phpcli:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-phpcli
+        profiles:
+            - "rtx"
+        expose:
+            - ${XDEBUG_PORT}
+            - 8080
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        build:
+            context: ./php-cli/
+            dockerfile: Dockerfile
+        depends_on:
+            - syntetiq-pgsql
+            - syntetiq-redis
+        volumes:
+            - phplog:/var/log/php-cli                       # store log files for debug mistakes
+            - ../app:/data                                  # dir with SyntetiQ project files
+            - ../model:/model
+            - ./php-cli/start.sh:/var/www/start.sh
+            - ./php-cli/supervisor/conf.d:/etc/supervisor/conf.d
+            - ./php-cli/composer:/var/www/.composer/:delegated      # cache composer for speedup install
+        working_dir: /data
+        env_file: .env
+        environment:
+            XDEBUG_CONFIG: remote_enable=On remote_host=${XDEBUG_HOST} remote_port=${XDEBUG_PORT}
+            STORAGE_EMULATOR_HOST: http://syntetiq-gcs-emulator:4443
+            SQ_MODEL_ROOT: /model
+        tty: true
+        stdin_open: true
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        oom_score_adj: -1000
+        ipc: "host"
+        command: /var/www/start.sh
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+
+    syntetiq-nv-phpcli:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-phpcli # same name as cli to route with nginx
+        profiles:
+            - "jetson"
+        expose:
+            - ${XDEBUG_PORT}
+            - 8080
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        build:
+            context: ${PWD}/php-nv-cli
+            dockerfile: ./Dockerfile.ngc
+        depends_on:
+            - syntetiq-pgsql
+            - syntetiq-redis
+        volumes:
+            - phplog:/var/log/php-nv-cli                    # store log files for debug mistakes
+            - ../app:/data                                  # dir with SyntetiQ project files
+            - ../model:/model
+            - ./php-nv-cli/start.sh:/var/www/start.sh
+            - ./php-nv-cli/supervisor/conf.d:/etc/supervisor/conf.d
+            - ./php-nv-cli/composer:/var/www/.cache/composer:delegated  # cache composer for speedup install
+        working_dir: /data
+        env_file: .env
+        runtime: nvidia
+        environment:
+            NVIDIA_VISIBLE_DEVICES: all
+            XDEBUG_CONFIG: remote_enable=On remote_host=${XDEBUG_HOST} remote_port=${XDEBUG_PORT}
+            SQ_MODEL_ROOT: /model
+        tty: true
+        stdin_open: true
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        oom_score_adj: -1000
+        ipc: "host"
+        command: /var/www/start.sh
+
+    syntetiq-triton-rtx:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-triton
+        image: nvcr.io/nvidia/tritonserver:25.01-py3
+        profiles:
+            - "triton-rtx"
+        # restart: always
+        deploy:
+        runtime: nvidia
+        ipc: "host"
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        ports:
+            - "8000:8000"  # HTTP Inference API
+            - "8001:8001"  # gRPC Inference API
+            - "8002:8002"  # Metrics API
+        volumes:
+            - ./model_repository:/models  # Mount your model repository
+        command: ["tritonserver", "--model-repository=/models"]
+
+    syntetiq-sam-api:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-sam-api
+        profiles:
+            - "rtx"
+        build:
+            context: ./sam-api
+            dockerfile: Dockerfile
+            args:
+                BASE_IMAGE: pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+                SAM2_BUILD_CUDA: 1
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        runtime: nvidia
+        ipc: "host"
+        environment:
+            SAM2_DEVICE: cuda
+            SAM2_CHECKPOINT: /models/checkpoints/sam2.1_hiera_small.pt
+            SAM2_MODEL_CFG: configs/sam2.1/sam2.1_hiera_s.yaml
+            SAM2_BBOX_PADDING_PX: 3
+        ports:
+            - "8010:8010"
+        volumes:
+            - ./sam-api/model:/models
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+
+    syntetiq-sam-api-cpu:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-sam-api-cpu
+        profiles:
+            - "nogpu"
+        build:
+            context: ./sam-api
+            dockerfile: Dockerfile
+            args:
+                BASE_IMAGE: python:3.11-slim
+                TORCH_PACKAGES: torch==2.5.1 torchvision==0.20.1
+                SAM2_BUILD_CUDA: 0
+        networks:
+            syntetiq:
+                aliases:
+                    - syntetiq-sam-api
+            syntetiq-docker: null
+        ipc: "host"
+        environment:
+            SAM2_DEVICE: cpu
+            SAM2_CHECKPOINT: /models/checkpoints/sam2.1_hiera_tiny.pt
+            SAM2_MODEL_CFG: configs/sam2.1/sam2.1_hiera_t.yaml
+            SAM2_BBOX_PADDING_PX: 3
+        ports:
+            - "8010:8010"
+        volumes:
+            - ./sam-api/model:/models
+
+    syntetiq-gcs-emulator:
+        container_name: ${COMPOSE_PROJECT_NAME:-sq}-gcs-emulator
+        image: fsouza/fake-gcs-server:latest
+        networks:
+            - syntetiq
+            - syntetiq-docker
+        profiles:
+            - base
+        command: ["-scheme", "http", "-host", "0.0.0.0", "-port", "4443", "-external-url", "http://syntetiq-gcs-emulator:4443"]
+        ports:
+            - "4443:4443"
+        volumes:
+            - ${GCS_STORAGE_PATH:-./gcs/storage}:/storage
+        env_file: .env

@@ -1,0 +1,24 @@
+/* @theme: admin.syntetiq; */
+
+$app-logo-background: url('#{$global-url}/syntetiqmodel/themes/syntetiq/images/logo-icon.svg') no-repeat 50%;
+;
+
+.desktop-version .app-logo {
+  display: inline-block;
+  text-indent: -9999px;
+  background: $app-logo-background;
+  background-size: contain;
+  height: 45px;
+}
+
+.form-description__logo-img {
+  max-height: 120px;
+}
+
+.desktop-version {
+  .main-menu__header {
+    .app-logo {
+      height: 45px;
+    }
+  }
+}

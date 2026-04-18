@@ -1,0 +1,130 @@
+parameters:
+
+services:
+  #  GCS Flysystem setup
+  sq.google_cloud_storage.client:
+    class: Google\Cloud\Storage\StorageClient
+    factory: ['SyntetiQ\Bundle\ModelBundle\Factory\GoogleCloudStorageClientFactory', 'create']
+    arguments:
+      - '%env(GCS_PROJECT_ID)%'
+      - '%env(GCS_KEY_FILE_LOCATION)%'
+      - '%env(STORAGE_EMULATOR_HOST)%'
+
+  sq.google_cloud_storage.bucket:
+    class: Google\Cloud\Storage\Bucket
+    factory: ['@sq.google_cloud_storage.client', 'bucket']
+    arguments:
+      - '%env(GCS_BUCKET_NAME)%'
+
+  sq.google_cloud_storage.flysystem_adapter:
+    class: League\Flysystem\GoogleCloudStorage\GoogleCloudStorageAdapter
+    arguments:
+      - '@sq.google_cloud_storage.bucket'
+      - '%syntetiq_gcs_directory%'
+
+  sq.google_cloud_storage.flysystem_filesystem:
+    class: League\Flysystem\Filesystem
+    arguments:
+      - '@sq.google_cloud_storage.flysystem_adapter'
+
+  sq.gaufrette.adapter.flysystem_gcs.attachments:
+    class: SyntetiQ\Bundle\ModelBundle\Gaufrette\Adapter\FlysystemAdapter
+    arguments:
+      - '@sq.google_cloud_storage.flysystem_filesystem'
+      - 'attachments'
+
+  sq.gaufrette.adapter.flysystem_gcs.attachments_cleanup_data:
+    class: SyntetiQ\Bundle\ModelBundle\Gaufrette\Adapter\FlysystemAdapter
+    arguments:
+      - '@sq.google_cloud_storage.flysystem_filesystem'
+      - 'attachments_cleanup_data'
+
+  sq.gaufrette.adapter.flysystem_gcs.import_tmp:
+    class: SyntetiQ\Bundle\ModelBundle\Gaufrette\Adapter\FlysystemAdapter
+    arguments:
+      - '@sq.google_cloud_storage.flysystem_filesystem'
+      - 'import_tmp'
+
+  sq.gaufrette.adapter.flysystem_gcs.processing_artifacts:
+    class: SyntetiQ\Bundle\ModelBundle\Gaufrette\Adapter\FlysystemAdapter
+    arguments:
+      - '@sq.google_cloud_storage.flysystem_filesystem'
+      - 'processing_artifacts'
+
+  sq.gaufrette.adapter.flysystem_gcs.qa_reports:
+    alias: sq.gaufrette.adapter.flysystem_gcs.processing_artifacts
+
+# End GCS Flysystem setup
+
+  sq.file_manager.attachments_cleanup_data:
+    class: Oro\Bundle\AttachmentBundle\Manager\FileManager
+    public: true
+    parent: oro_gaufrette.file_manager
+    arguments:
+      - 'attachments_cleanup_data'
+      - '@oro_attachment.protocol_validator'
+      - '@oro_attachment.mapper.client_mime_type_mapper'
+      - '@oro_attachment.tools.external_file_factory'
+
+  sq.file_manager.import_export:
+    class: Oro\Bundle\AttachmentBundle\Manager\FileManager
+    public: true
+    parent: oro_gaufrette.file_manager
+    arguments:
+      - 'import_export'
+      - '@oro_attachment.protocol_validator'
+      - '@oro_attachment.mapper.client_mime_type_mapper'
+      - '@oro_attachment.tools.external_file_factory'
+
+  sq.file_manager.import_files:
+    class: Oro\Bundle\AttachmentBundle\Manager\FileManager
+    public: true
+    parent: oro_gaufrette.file_manager
+    arguments:
+      - 'import_files'
+      - '@oro_attachment.protocol_validator'
+      - '@oro_attachment.mapper.client_mime_type_mapper'
+      - '@oro_attachment.tools.external_file_factory'
+
+  sq.file_manager.import_chunks:
+    class: Oro\Bundle\AttachmentBundle\Manager\FileManager
+    public: true
+    parent: oro_gaufrette.file_manager
+    arguments:
+      - 'import_chunks'
+      - '@oro_attachment.protocol_validator'
+      - '@oro_attachment.mapper.client_mime_type_mapper'
+      - '@oro_attachment.tools.external_file_factory'
+
+  sq.file_manager.import_tmp:
+    class: Oro\Bundle\AttachmentBundle\Manager\FileManager
+    public: true
+    parent: oro_gaufrette.file_manager
+    arguments:
+      - 'import_tmp'
+      - '@oro_attachment.protocol_validator'
+      - '@oro_attachment.mapper.client_mime_type_mapper'
+      - '@oro_attachment.tools.external_file_factory'
+
+  sq.file_manager.processing_artifacts:
+    class: Oro\Bundle\AttachmentBundle\Manager\FileManager
+    public: true
+    parent: oro_gaufrette.file_manager
+    arguments:
+      - 'processing_artifacts'
+      - '@oro_attachment.protocol_validator'
+      - '@oro_attachment.mapper.client_mime_type_mapper'
+      - '@oro_attachment.tools.external_file_factory'
+
+  sq.file_manager.qa_reports:
+    alias: sq.file_manager.processing_artifacts
+
+  sq.file_manager.model_files:
+    class: Oro\Bundle\AttachmentBundle\Manager\FileManager
+    public: true
+    parent: oro_gaufrette.file_manager
+    arguments:
+      - 'model_files'
+      - '@oro_attachment.protocol_validator'
+      - '@oro_attachment.mapper.client_mime_type_mapper'
+      - '@oro_attachment.tools.external_file_factory'

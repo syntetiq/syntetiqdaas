@@ -1,0 +1,133 @@
+syntetiq:
+    navigation:
+        data_set_management.label: Management
+        data_set_export_management.label: Export Management
+        model_management.label: Model Management
+        model.view: 'Model #%identifier%'
+        dataset.view: 'Data Set #%identifier%'
+
+    model:
+        entity_label:        Model
+        entity_plural_label: Models
+        entity_description: Model
+        model_builds.label: Model Builds
+        pretrained_models.label: Pretrained Models
+        organization.label: Organization
+        recent.label: Recent Models
+        view_all.label: View All
+
+        data_set.label: Data Set
+
+        resource.label: Resource
+        name.label: Name
+        dataset_name.label: Dataset Name
+        dataset_number.label: Number of images
+        description.label: Description
+        id.label: Id
+        owner.label: Owner
+
+        sections:
+            general: General
+            items: Items
+            translation: Translate
+            build: Build
+            pretrained: Pretrained Models
+
+        page:
+            title.label: Model
+            translations.label: Translate
+
+        button:
+            model.edit.label: Edit Model
+            model.add.label: Add Model
+            model.upload_pretrained.label: Upload Pretrained Model
+
+    controller:
+        model.saved.message: Model has been saved
+        model_build.saved.message: Model Build has been saved
+        model_pretrained.saved.message: Pretrained model has been uploaded
+
+
+    build:
+        label: Build model
+        env_label: Environment
+        epoch_label: Epoch
+        env.conda_label: Conda
+        env.venv_label: Venv
+
+    action:
+        build:
+            success: Model building started
+
+    modelbuild:
+        entity_plural_label: Model Builds
+        entity_label: Model Build
+        entity_description: Model Build
+        recent.label: Recent Model Builds
+        context.label: Context
+        id.label: Id
+        model.label: Model
+        artifact.label: Artifact
+        output.label: Output
+        error_output.label: Error Output
+        result_file.label: Result File
+        env.label: Env
+        engine.label: Engine
+        engine_model.label: Model Type
+        epoch.label: Epoch
+        image_size.label: Image Size
+        percent_test_items.label: Percent Test Items
+        percent_validation_items.label: Percent Validation Items
+        percent_train_items.label: Percent Train Items
+        ready_only.label: Ready Only
+        calculate_dataset_qa.label: Calculate Dataset QA
+        deepstream_export.label: Export DeepStream ONNX
+        pretrained_model.label: Uploaded Pretrained Model
+        pretrained_model.placeholder: No uploaded pretrained model
+        tags.label: Tags
+        tags.placeholder: All tags
+        boolean.yes: Yes
+        boolean.no: No
+        initialized.label: Initialized
+        owner.label: Owner
+        organization.label: Organization
+        started_at: Started At
+        finished_at: Finished At
+        dataset_qa_status.label: Dataset QA Status
+        dataset_qa_started_at.label: Dataset QA Started At
+        dataset_qa_finished_at.label: Dataset QA Finished At
+        dataset_qa_heartbeat_at.label: Dataset QA Heartbeat At
+        dataset_qa_progress.label: Dataset QA Progress
+        dataset_qa_progress_message.label: Dataset QA Progress Message
+        dataset_qa_error_output.label: Dataset QA Error Output
+        button:
+            edit.label: Build Model
+
+        navigation:
+            modelbuild.view: 'Model Build #%identifier%'
+
+    modelpretrained:
+        entity_label: Pretrained Model
+        entity_plural_label: Pretrained Models
+        entity_description: Pretrained Model
+        id.label: Id
+        name.label: Name
+        model.label: Model
+        engine.label: Engine
+        engine_model.label: Engine Model
+        created_at.label: Created At
+        organization.label: Organization
+        original_filename.label: File Name
+        file.label: File
+        owner.label: Owner
+
+oro:
+    ui:
+        started_at: Started At
+        finished_at: Finished At
+    auth:
+        description:
+            logo: SyntetiQ
+            main: SyntetiQ
+            text: The SyntetiQ Model
+    copyright: © {{year}} SyntetiQ, Inc. All Rights Reserved

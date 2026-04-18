@@ -1,0 +1,133 @@
+name: "Fruit Detection"
+image_size: "320_320"
+items:
+  - image: "Anjou_001.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "anjou"
+    objects:
+      - name: "anjou_pear"
+        truncated: false
+        min_x: 54
+        max_x: 163
+        min_y: 109
+        max_y: 217
+  - image: "Anjou_002.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "anjou"
+    objects:
+      - name: "anjou_pear"
+        truncated: false
+        min_x: 82
+        max_x: 190
+        min_y: 136
+        max_y: 245
+  - image: "Anjou_003.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "anjou"
+    objects:
+      - name: "anjou_pear"
+        truncated: false
+        min_x: 27
+        max_x: 136
+        min_y: 54
+        max_y: 163
+  - image: "Anjou_004.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "anjou"
+    objects:
+      - name: "anjou_pear"
+        truncated: false
+        min_x: 109
+        max_x: 217
+        min_y: 82
+        max_y: 190
+  - image: "Anjou_005.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "anjou"
+    objects:
+      - name: "anjou_pear"
+        truncated: false
+        min_x: 44
+        max_x: 152
+        min_y: 120
+        max_y: 228
+  - image: "Kaiser_001.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "kaiser"
+    objects:
+      - name: "kaiser_pear"
+        truncated: false
+        min_x: 65
+        max_x: 174
+        min_y: 98
+        max_y: 207
+  - image: "Kaiser_002.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "kaiser"
+    objects:
+      - name: "kaiser_pear"
+        truncated: false
+        min_x: 76
+        max_x: 185
+        min_y: 109
+        max_y: 217
+  - image: "Kaiser_003.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "kaiser"
+    objects:
+      - name: "kaiser_pear"
+        truncated: false
+        min_x: 33
+        max_x: 141
+        min_y: 65
+        max_y: 174
+  - image: "Kaiser_004.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "kaiser"
+    objects:
+      - name: "kaiser_pear"
+        truncated: false
+        min_x: 98
+        max_x: 207
+        min_y: 87
+        max_y: 196
+  - image: "Kaiser_005.jpg"
+    img_width: 348
+    img_height: 348
+    source_type: "manual"
+    group: "train"
+    tag: "kaiser"
+    objects:
+      - name: "kaiser_pear"
+        truncated: false
+        min_x: 54
+        max_x: 163
+        min_y: 130
+        max_y: 239

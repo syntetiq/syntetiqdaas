@@ -1,0 +1,262 @@
+{% extends '@OroUI/actions/view.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+{% block pageHeader %}
+
+    {% set modelName %}
+        {{ 'syntetiq.model.page.title.label'|trans }}: {{ entity.model.name }}
+    {% endset %}
+
+    {% set breadcrumbs = {
+        'entity': entity,
+        'indexPath': path('syntetiq_model_model_view', {id : entity.model.id}),
+        'indexLabel': modelName,
+        'entityTitle': 'syntetiq.modelbuild.navigation.modelbuild.view'|trans({
+        '%identifier%': entity.id|default('N/A'|trans)
+    })
+    } %}
+
+    {{ parent() }}
+{% endblock pageHeader %}
+
+{% block navButtons %}
+    {% import '@OroUI/macros.html.twig' as UI %}
+    {{ UI.deleteButton({
+        'dataUrl': path('syntetiq_model_model_build_delete', {'id': entity.id}),
+        'dataRedirect': path('syntetiq_model_model_view', {'id': entity.model.id}),
+        'aCss': 'no-hash remove-button',
+        'dataId': entity.id,
+        'id': 'btn-remove-model-build',
+        'entity_label': 'syntetiq.modelbuild.entity_label'|trans
+    }) }}
+{% endblock %}
+
+{% block content_data %}
+    {% set generalInfo %}
+        <style>
+            .model-build-general-info {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 24px;
+            }
+
+            .model-build-general-info__column {
+                min-width: 0;
+            }
+
+            .model-build-general-info__full-width {
+                grid-column: 1 / -1;
+            }
+
+            @media (max-width: 1024px) {
+                .model-build-general-info {
+                    grid-template-columns: minmax(0, 1fr);
+                }
+            }
+        </style>
+
+        <div class="model-build-general-info">
+            <div class="model-build-general-info__column">
+                {{ UI.renderHtmlProperty('syntetiq.modelbuild.model.label'|trans, UI.entityViewLink(entity.model, entity.model.name, 'syntetiq_model_model_view')) }}
+                {{ UI.renderProperty('oro.ui.created_at'|trans, entity.createdAt ? entity.createdAt|oro_format_datetime : 'N/A'|trans) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.env.label'|trans, entity.env) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.engine.label'|trans, entity.engine) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.engine_model.label'|trans, entity.engineModel) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.image_size.label'|trans, entity.imageSize|replace({'_': ' x '})) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.epoch.label'|trans, entity.epoch) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.pretrained_model.label'|trans, entity.pretrainedModel ? entity.pretrainedModel.displayLabel : 'N/A'|trans) }}
+                {{ UI.renderHtmlProperty('syntetiq.modelbuild.artifact.label'|trans, oro_file_view(entity.artifact)) }}
+            </div>
+            <div class="model-build-general-info__column">
+                {{ UI.renderProperty('syntetiq.modelbuild.percent_train_items.label'|trans, entity.percentTrainItems) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.percent_validation_items.label'|trans, entity.percentValidationItems) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.percent_test_items.label'|trans, entity.percentTestItems) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.ready_only.label'|trans, entity.readyOnly ? 'syntetiq.modelbuild.boolean.yes'|trans : 'syntetiq.modelbuild.boolean.no'|trans) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.calculate_dataset_qa.label'|trans, entity.calculateDatasetQa ? 'syntetiq.modelbuild.boolean.yes'|trans : 'syntetiq.modelbuild.boolean.no'|trans) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.tags.label'|trans, entity.tags ? entity.tags|join(', ') : 'All') }}
+                {{ UI.renderProperty('syntetiq.modelbuild.started_at'|trans, entity.startedAt ? entity.startedAt|oro_format_datetime : 'N/A'|trans) }}
+                {{ UI.renderProperty('syntetiq.modelbuild.finished_at'|trans, entity.finishedAt ? entity.finishedAt|oro_format_datetime : 'N/A'|trans) }}
+            </div>
+            <div class="model-build-general-info__full-width">
+                {{ UI.renderHtmlProperty('syntetiq.modelbuild.output.label'|trans, entity.output|raw|nl2br) }}
+                {{ UI.renderHtmlProperty('syntetiq.modelbuild.error_output.label'|trans, entity.errorOutput|nl2br) }}
+            </div>
+        </div>
+    {% endset %}
+
+    {% set tensorboardContainerId = 'model-build-tensorboard-' ~ entity.id %}
+    {% set tensorboardInfo %}
+        <style>
+            .model-build-tensorboard {
+                padding: 16px;
+                background: #fff;
+                border: 1px solid #e5e8ef;
+                border-radius: 6px;
+            }
+
+            .model-build-tensorboard__header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 16px;
+                flex-wrap: wrap;
+            }
+
+            .model-build-tensorboard__title {
+                font-size: 18px;
+                font-weight: 600;
+                color: #1f2d3d;
+                margin: 0 0 6px;
+            }
+
+            .model-build-tensorboard__meta {
+                color: #5f6b7a;
+                font-size: 13px;
+            }
+
+            .model-build-tensorboard__link {
+                white-space: nowrap;
+            }
+
+            .model-build-tensorboard__status {
+                color: #5f6b7a;
+                font-size: 14px;
+            }
+
+            .model-build-tensorboard__sections {
+                display: grid;
+                gap: 20px;
+            }
+
+            .model-build-tensorboard__section-title {
+                margin: 0 0 12px;
+                font-size: 15px;
+                font-weight: 600;
+                color: #1f2d3d;
+                text-transform: capitalize;
+            }
+
+            .model-build-tensorboard__cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 14px;
+            }
+
+            .model-build-tensorboard__card {
+                border: 1px solid #e5e8ef;
+                border-radius: 6px;
+                padding: 14px;
+                background: #fbfcfe;
+            }
+
+            .model-build-tensorboard__card-title {
+                margin: 0 0 4px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #1f2d3d;
+            }
+
+            .model-build-tensorboard__card-tag {
+                font-size: 12px;
+                color: #7b8794;
+                margin-bottom: 10px;
+                word-break: break-word;
+            }
+
+            .model-build-tensorboard__stats {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+
+            .model-build-tensorboard__stat-label {
+                display: block;
+                font-size: 11px;
+                color: #7b8794;
+                text-transform: uppercase;
+                margin-bottom: 2px;
+            }
+
+            .model-build-tensorboard__stat-value {
+                font-size: 13px;
+                color: #1f2d3d;
+                font-weight: 600;
+            }
+
+            .model-build-tensorboard__chart {
+                width: 100%;
+                height: 160px;
+                background: #fff;
+                border-radius: 4px;
+                border: 1px solid #edf2f7;
+            }
+
+            .model-build-tensorboard__empty {
+                padding: 18px;
+                background: #fff7e8;
+                border: 1px solid #f5d79b;
+                border-radius: 6px;
+                color: #725100;
+            }
+        </style>
+
+        <div class="widget-content">
+            <div
+                id="{{ tensorboardContainerId }}"
+                class="model-build-tensorboard"
+                {{ UI.renderPageComponentAttributes({
+                    view: 'syntetiqmodel/js/app/views/model-build-tensorboard-view',
+                    options: {
+                        runName: tensorboardRunName,
+                        tagsUrl: '/tb/data/plugin/scalars/tags',
+                        scalarsUrl: '/tb/data/plugin/scalars/scalars',
+                        isLive: entity.startedAt and not entity.finishedAt,
+                        refreshInterval: 30000
+                    }
+                }) }}
+            ></div>
+        </div>
+    {% endset %}
+
+    {% set datasetQaInfo %}
+        <div class="widget-content">
+            {% include '@SyntetiQDataSet/DatasetQa/panel.html.twig' with {datasetQa: datasetQa, showTitle: false} %}
+        </div>
+    {% endset %}
+
+    {% set buildLogsInfo %}
+        <div class="widget-content">
+            {% include '@SyntetiQModel/BuildRuntime/panel.html.twig' with {buildLogs: buildLogs, showTitle: false} %}
+        </div>
+    {% endset %}
+
+    {% set dataBlocks = [] %}
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'syntetiq.model.sections.general'|trans,
+        'subblocks': [{'data' : [generalInfo]}]
+    }]) %}
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'Build Logs',
+        'subblocks': [{'data' : [buildLogsInfo]}]
+    }]) %}
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'TensorBoard Metrics',
+        'subblocks': [{'data' : [tensorboardInfo]}]
+    }]) %}
+
+    {% set dataBlocks = dataBlocks|merge([{
+        'title': 'Dataset QA',
+        'subblocks': [{'data' : [datasetQaInfo]}]
+    }]) %}
+
+
+    {% set id = 'model-build-view' %}
+    {% set data = {'dataBlocks': dataBlocks} %}
+
+    {{ parent() }}
+{% endblock content_data %}

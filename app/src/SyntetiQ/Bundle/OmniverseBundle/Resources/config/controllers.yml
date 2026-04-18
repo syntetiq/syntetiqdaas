@@ -1,0 +1,20 @@
+services:
+    _defaults:
+        public: true
+
+    SyntetiQ\Bundle\OmniverseBundle\Controller\RequestController:
+        arguments:
+            - '@oro_form.update_handler'
+            - '@translator'
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\OmniverseBundle\Controller\Api\CallbackController:
+        arguments:
+            - '@SyntetiQ\Bundle\OmniverseBundle\Service\OmniverseResultHandler'
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }

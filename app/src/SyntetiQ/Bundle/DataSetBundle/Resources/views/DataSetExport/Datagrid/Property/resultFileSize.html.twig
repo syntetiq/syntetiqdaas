@@ -1,0 +1,4 @@
+{% set resultFile = record.getValue('resultFile') %}
+{% if resultFile and resultFile.fileSize is not null %}
+    {{ file_size(resultFile.fileSize) }}
+{% endif %}

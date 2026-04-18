@@ -1,0 +1,15 @@
+{% extends '@OroUI/actions/index.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+{% set pageTitle = 'syntetiq.model.entity_plural_label'|trans %}
+
+{% block navButtons %}
+    {#{% if is_granted('syntetiq_model_model_create') %}#}
+        <div class="btn-group">
+            {{ UI.addButton({
+                'path': path('syntetiq_model_model_create'),
+                'entity_label': 'syntetiq.model.entity_label'|trans
+            }) }}
+        </div>
+    {#{% endif %}#}
+{% endblock %}

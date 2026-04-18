@@ -1,0 +1,44 @@
+{% extends '@OroDashboard/Dashboard/widget.html.twig' %}
+{% import '@OroDataGrid/macros.html.twig' as dataGrid %}
+
+{% block content %}
+    {{ dataGrid.renderGrid('syntetiq-model-recent-data-sets-grid') }}
+{% endblock %}
+
+{% block actions %}
+    {% set actions = [
+        {
+            'url': path('syntetiq_model_data_set_index'),
+            'type': 'link',
+            'label': 'syntetiq.dataset.view_all.label'|trans,
+        },
+        {
+            'url': '#',
+            'type': 'button',
+            'class': 'btn-primary',
+            'label': 'syntetiq.dataset.button.create.label'|trans,
+            'icon': 'plus',
+            'data': {
+                'url': path('syntetiq_model_data_set_create'),
+                'page-component-module': 'oroui/js/app/components/widget-component',
+                'page-component-options': {
+                    'type': 'dialog',
+                    'multiple': false,
+                    'createOnEvent': 'click',
+                    'reload-grid-name': 'syntetiq-model-recent-data-sets-grid',
+                    'options': {
+                        'alias': 'data-set-dialog',
+                        'dialogOptions': {
+                            'title': 'syntetiq.dataset.button.create.label'|trans,
+                            'allowMaximize': true,
+                            'allowMinimize': true,
+                            'modal': true,
+                            'width': 600
+                        }
+                    }
+                }|json_encode
+            }
+        }
+    ] %}
+    {{ parent() }}
+{% endblock %}

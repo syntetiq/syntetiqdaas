@@ -1,0 +1,13 @@
+dashboards:
+    widgets:
+        recent_data_sets:
+            label: Recent Data Sets
+            route: oro_dashboard_widget
+            route_parameters:
+                bundle: SyntetiQDataSet
+                name: recent_data_sets
+
+            description: This widget displays the most recent data sets
+            icon_class: fa-list
+
+    

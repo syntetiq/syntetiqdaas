@@ -1,0 +1,5 @@
+{% if record.getValue('file') %}
+    {{ oro_file_view(record.getValue('file')) }}
+{% else %}
+    N/A
+{% endif %}

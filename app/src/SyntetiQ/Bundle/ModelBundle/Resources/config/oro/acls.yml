@@ -1,0 +1,30 @@
+acls:
+    syntetiq_model_model_view:
+        type: entity
+        class: SyntetiQ\Bundle\ModelBundle\Entity\Model
+        permission: VIEW
+        group_name: ""
+
+    syntetiq_model_model_edit:
+        type: entity
+        class: SyntetiQ\Bundle\ModelBundle\Entity\Model
+        permission: EDIT
+        group_name: ""
+
+    syntetiq_model_model_create:
+        type: entity
+        class: SyntetiQ\Bundle\ModelBundle\Entity\Model
+        permission: CREATE
+        group_name: ""
+
+    syntetiq_model_model_build_view:
+        type: entity
+        class: SyntetiQ\Bundle\ModelBundle\Entity\ModelBuild
+        permission: VIEW
+        group_name: ""
+
+    syntetiq_model_model_build_create:
+        type: entity
+        class: SyntetiQ\Bundle\ModelBundle\Entity\ModelBuild
+        permission: CREATE
+        group_name: ""

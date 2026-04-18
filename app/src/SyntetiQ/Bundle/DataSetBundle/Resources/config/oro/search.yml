@@ -1,0 +1,17 @@
+search:
+    SyntetiQ\Bundle\DataSetBundle\Entity\DataSet:
+        alias:                          syntetiq_data_set
+        route:
+            name:                       syntetiq_model_data_set_view
+            parameters:
+                id:                     id
+        search_template:                '@SyntetiQDataSet/Search/dataset.html.twig'
+        fields:
+            -
+                name:                   id
+                target_type:            integer
+                target_fields:          [id]
+            -
+                name:                   name
+                target_type:            text
+                target_fields:          [name]

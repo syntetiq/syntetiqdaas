@@ -1,0 +1,3 @@
+upstream phpcli_upstream {
+    server ${NGINX_PHPCLI_UPSTREAM};
+}

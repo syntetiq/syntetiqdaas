@@ -1,0 +1,2 @@
+bundles:
+    - { name: SyntetiQ\Bundle\DataSetBundle\SyntetiQDataSetBundle, priority: 100 }

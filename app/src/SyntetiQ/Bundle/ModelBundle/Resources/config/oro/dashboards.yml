@@ -1,0 +1,19 @@
+dashboards:
+    widgets:
+        recent_models:
+            label: Recent Models
+            route: oro_dashboard_widget
+            route_parameters:
+                bundle: SyntetiQModel
+                name: recent_models
+            description: This widget displays the most recent models
+            icon_class: fa-cube
+
+        recent_model_builds:
+            label: Recent Model Builds
+            route: oro_dashboard_widget
+            route_parameters:
+                bundle: SyntetiQModel
+                name: recent_model_builds
+            description: This widget displays the most recent model builds
+            icon_class: fa-cogs

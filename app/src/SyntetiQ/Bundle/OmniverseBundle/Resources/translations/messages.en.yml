@@ -1,0 +1,110 @@
+syntetiq:
+    omniverse:
+        actions:
+            genarate_images:
+                label: 'Omniverse Integration'
+        settings:
+            labels:
+                label: 'Label'
+        transport:
+            label: 'Omniverse Transport'
+            channel_type:
+                label: 'Omniverse'
+        targetUrl:
+            label: 'Target URL'
+        callbackUrl:
+            label: 'Callback URL'
+            tooltip: 'The full path (https://domain.com/api/omniverse/callback) used for the Omniverse completion callback.'
+        generateimagesrequest:
+            entity_label: 'Generate Images Request'
+            entity_plural_label: 'Generate Images Requests'
+            entity_description: 'Generate Images Request'
+            id.label: 'Id'
+            hash.label: 'Hash'
+            organization.label: 'Organization'
+            data_set.label: 'Data Set'
+            scene.label: 'Scene'
+            focal_length.label: 'Focal Length'
+            label_name.label: 'Label Name'
+            cube_size.label: 'Cube Size'
+            tmp_root.label: 'Tmp Root'
+            convert_images_to_jpeg.label: 'Convert Images To Jpeg'
+            jpeg_quality.label: 'Jpeg Quality'
+            cleanup_after_zip.label: 'Cleanup After Zip'
+            spawn_cube.label: 'Spawn Cube'
+            include_labels_text.label: 'Include Labels Text'
+            sections:
+                general: 'General'
+            integration:
+                label: 'Omniverse Integration'
+                placeholder: 'Select integration'
+                tooltip: 'Choose which enabled Omniverse integration should send this request and receive the imported result.'
+            scene:
+                tooltip: 'Choose the USD scene used for rendering. Pick a saved option or type a new full USD path.'
+            frames:
+                label: 'Frames'
+                tooltip: 'How many frames or images to generate in this request.'
+            focalLength:
+                label: 'Focal Length'
+                tooltip: 'Camera focal length used for rendering. Lower values give a wider view.'
+            width:
+                label: 'Width'
+                tooltip: 'Output image width in pixels.'
+            height:
+                label: 'Height'
+                tooltip: 'Output image height in pixels.'
+            labelName:
+                label: 'Label Name'
+                tooltip: 'Annotation label or class name assigned to the generated object, for example cube.'
+            spawnCube:
+                label: 'Spawn Cube'
+                tooltip: 'Enable this to add a cube primitive into the scene before rendering.'
+            cubeSize:
+                label: 'Cube Size'
+                tooltip: 'Base cube size value used when the cube is spawned.'
+            tmpRoot:
+                label: 'Tmp Root'
+                tooltip: 'Temporary working directory used while images are generated and packed.'
+            convertImagesToJpeg:
+                label: 'Convert Images To Jpeg'
+                tooltip: 'Convert generated images to JPEG before creating the archive.'
+            jpegQuality:
+                label: 'Jpeg Quality'
+                tooltip: 'JPEG compression quality from 1 to 100. Higher values keep more detail.'
+            cleanupAfterZip:
+                label: 'Cleanup After Zip'
+                tooltip: 'Delete temporary generated files after the ZIP archive is created.'
+            cameraPos:
+                label: 'Camera Pos'
+                tooltip: 'Camera start position as X, Y and Z coordinates.'
+            cameraPosEnd:
+                label: 'Camera Pos End'
+                tooltip: 'Camera end position as X, Y and Z coordinates. Use the same as Camera Pos for a fixed camera.'
+            cameraRotation:
+                label: 'Camera Rotation'
+                tooltip: 'Camera rotation as X, Y and Z Euler angles.'
+            cubeTranslate:
+                label: 'Cube Translate'
+                tooltip: 'Cube position offset as X, Y and Z coordinates.'
+            cubeScale:
+                label: 'Cube Scale'
+                tooltip: 'Cube scale multiplier on the X, Y and Z axes.'
+            includeLabels:
+                label: 'Include Labels'
+                placeholder: 'Enter labels, one per line or comma separated'
+                tooltip: 'Optional labels to include in this generation request. Enter one label per line or separate them with commas.'
+            owner:
+                label: 'Owner'
+            status:
+                label: 'Status'
+            sent_at:
+                label: 'Sent At'
+            handled_at:
+                label: 'Handled At'
+            response:
+                label: 'Response'
+
+        controller:
+            generation_images_request:
+                saved:
+                    message: Generation Images Request has been saved/sent

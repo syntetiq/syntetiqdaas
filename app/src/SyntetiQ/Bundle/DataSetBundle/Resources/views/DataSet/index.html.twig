@@ -1,0 +1,14 @@
+{% extends '@OroUI/actions/index.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+{% set pageTitle = 'syntetiq.dataset.entity_plural_label'|trans %}
+
+{% block navButtons %}
+    <div class="btn-group">
+        {{ UI.addButton({
+            'path': path('syntetiq_model_data_set_create'),
+            'entity_label': 'syntetiq.dataset.entity_label'|trans
+        }) }}
+    </div>
+    {# {% endif %} #}
+{% endblock %}

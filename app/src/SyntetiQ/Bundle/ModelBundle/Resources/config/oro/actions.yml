@@ -1,0 +1,40 @@
+operations:
+    syntetiq_model_build:
+        label: syntetiq.build.label
+        page_reload: true
+        acl_resource: syntetiq_model_model_create
+        enabled: true
+        routes:
+            - syntetiq_model_model_build_view
+        datagrids:
+            - syntetiq-model-build-grid
+        preconditions:
+            '@and':
+                -   '@equal': [ $.data.initialized, false ]
+        order: 10
+        button_options:
+            icon: fa-play
+            class: btn-danger icons-holder-text
+        actions:
+            -   '@run_action_group':
+                    action_group: buildNNModel
+                    parameters_mapping:
+                        data: $.data
+
+action_groups:
+    buildNNModel:
+        parameters:
+            data:
+                type: SyntetiQ\Bundle\ModelBundle\Entity\ModelBuild
+        actions:
+            -   '@call_service_method':
+                    service: SyntetiQ\Bundle\ModelBundle\Async\ProcessRunner
+                    method: run
+                    method_parameters:
+                        modelBuild: $.data
+            -   '@flash_message':
+                    message: syntetiq.action.build.success
+                    type: 'success'
+                    message_parameters:
+                        'title': $.data.name
+

@@ -1,0 +1,20 @@
+navigation:
+    menu_config:
+        items:
+            dataset_tab:
+                label: syntetiq.dataset.page.title.label
+                uri:   '#'
+                extras:
+                    position: 15
+            data_set_tab_link:
+                label: syntetiq.navigation.data_set_management.label
+                route: syntetiq_model_data_set_index
+            data_set_tab_export_link:
+                label: syntetiq.navigation.data_set_export_management.label
+                route: syntetiq_model_data_set_export_index
+        tree:
+            application_menu:
+                children:
+                    dataset_tab:
+                        children:
+                            data_set_tab_link: ~

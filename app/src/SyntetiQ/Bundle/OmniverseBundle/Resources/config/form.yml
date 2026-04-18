@@ -1,0 +1,16 @@
+services:
+    SyntetiQ\Bundle\OmniverseBundle\Form\Type\GenerateImagesRequestType:
+        tags:
+            - { name: form.type }
+
+    SyntetiQ\Bundle\OmniverseBundle\Form\Type\Vector3Type:
+        tags:
+            - { name: form.type }
+
+    SyntetiQ\Bundle\OmniverseBundle\Form\Type\OmniverseTransportSettingsType:
+        tags:
+            - { name: form.type }
+
+    SyntetiQ\Bundle\OmniverseBundle\Form\Type\OmniverseChannelSelectType:
+        tags:
+            - { name: form.type }

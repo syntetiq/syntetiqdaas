@@ -1,0 +1,4 @@
+{% set resultFile = record.getValue('resultFile') %}
+{% if resultFile %}
+    {{ oro_file_view(resultFile) }}
+{% endif %}

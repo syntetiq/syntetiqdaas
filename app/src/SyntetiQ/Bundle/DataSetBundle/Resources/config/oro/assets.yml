@@ -1,0 +1,9 @@
+css:
+    inputs:
+        # Settings
+        - 'bundles/syntetiqdataset/themes/syntetiq/css/scss/gallery-view.scss'
+        - 'bundles/syntetiqdataset/css/svelte/editor-svelte-component.css'
+    output: css/oro.css
+#    auto_rtl_inputs:
+#        - 'bundles/oro*/**'
+#        - '~timepicker/jquery.timepicker.css'

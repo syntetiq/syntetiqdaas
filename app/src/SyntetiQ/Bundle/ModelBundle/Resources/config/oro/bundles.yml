@@ -1,0 +1,2 @@
+bundles:
+    - { name: SyntetiQ\Bundle\ModelBundle\SyntetiQModelBundle, kernel: true, priority: 100 }

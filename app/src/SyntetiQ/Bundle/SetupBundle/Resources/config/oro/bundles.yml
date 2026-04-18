@@ -1,0 +1,2 @@
+bundles:
+    - { name: SyntetiQ\Bundle\SetupBundle\SyntetiQSetupBundle, priority: 1000 }

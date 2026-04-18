@@ -1,0 +1,9 @@
+security:
+    firewalls:
+        dev:
+            pattern:  ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        omniverse_callback:
+            pattern: ^/api/omniverse/callback
+            security: false

@@ -1,0 +1,98 @@
+{% set width = record.getValue('imgWidth') ?: 0 %}
+{% set height = record.getValue('imgHeight') ?: 0 %}
+{% set image = record.getValue('image') %}
+{% set fileName = record.getValue('originalFilename') %}
+{% set maxPreviewWidth = previewWidth|default(320) %}
+{% set maxPreviewHeight = previewHeight|default(320) %}
+{% set resolvedPreviewWidth = width %}
+{% set resolvedPreviewHeight = height %}
+{% if width > 0 and height > 0 and (width > maxPreviewWidth or height > maxPreviewHeight) %}
+    {% if (maxPreviewWidth / width) < (maxPreviewHeight / height) %}
+        {% set resolvedPreviewWidth = maxPreviewWidth %}
+        {% set resolvedPreviewHeight = (height * (maxPreviewWidth / width))|round(0, 'common') %}
+    {% else %}
+        {% set resolvedPreviewHeight = maxPreviewHeight %}
+        {% set resolvedPreviewWidth = (width * (maxPreviewHeight / height))|round(0, 'common') %}
+    {% endif %}
+{% endif %}
+{% set resolvedPreviewWidth = resolvedPreviewWidth > 0 ? resolvedPreviewWidth : maxPreviewWidth %}
+{% set resolvedPreviewHeight = resolvedPreviewHeight > 0 ? resolvedPreviewHeight : maxPreviewHeight %}
+{% set canvasId = canvasPrefix|default('canvas') ~ '-' ~ record.getValue('id') %}
+
+<div style="display: inline-block;">
+    <div style="position: relative; display: inline-block; width: {{ resolvedPreviewWidth }}px; height: {{ resolvedPreviewHeight }}px;">
+        <img
+            src="{{ image ? resized_image_url(image, resolvedPreviewWidth, resolvedPreviewHeight) : '' }}"
+            width="{{ resolvedPreviewWidth }}"
+            height="{{ resolvedPreviewHeight }}"
+            alt="{{ fileName ?: 'Data set item image' }}"
+            style="display: block;"
+        >
+        <canvas
+            id="{{ canvasId }}"
+            style="position: absolute; top: 0; left: 0; pointer-events: none;"
+            width="{{ resolvedPreviewWidth }}"
+            height="{{ resolvedPreviewHeight }}"
+        ></canvas>
+    </div>
+
+    <script>
+        (function () {
+            window.sqDataSetColor = window.sqDataSetColor || function (label) {
+                var normalized = String(label || 'N/A');
+                var hash = 2166136261;
+
+                for (var i = 0; i < normalized.length; i++) {
+                    hash ^= normalized.charCodeAt(i);
+                    hash = Math.imul(hash, 16777619);
+                }
+
+                hash >>>= 0;
+
+                var hue = hash % 360;
+                var saturation = 62 + ((hash >>> 9) % 24);
+                var lightness = 34 + ((hash >>> 17) % 18);
+                var backgroundLightness = 90 + ((hash >>> 25) % 6);
+
+                return {
+                    border: 'hsl(' + hue + ', ' + saturation + '%, ' + lightness + '%)',
+                    background: 'hsla(' + hue + ', ' + Math.min(saturation + 8, 92) + '%, ' + backgroundLightness + '%, 0.95)',
+                    text: 'hsl(' + hue + ', ' + Math.max(saturation - 6, 52) + '%, ' + Math.max(lightness - 18, 18) + '%)'
+                };
+            };
+
+            var canvas = document.getElementById('{{ canvasId }}');
+            if (!canvas) {
+                return;
+            }
+
+            var context = canvas.getContext('2d');
+            var jsonObject = [];
+            try {
+                jsonObject = JSON.parse('{{ record.getValue('objectsJson')|default('[]')|e('js') }}');
+            } catch (error) {
+                jsonObject = [];
+            }
+            var originalWidth = {{ width }};
+            var originalHeight = {{ height }};
+            var previewWidth = {{ resolvedPreviewWidth }};
+            var previewHeight = {{ resolvedPreviewHeight }};
+            var scaleX = originalWidth > 0 ? previewWidth / originalWidth : 1;
+            var scaleY = originalHeight > 0 ? previewHeight / originalHeight : 1;
+
+            for (var i in jsonObject) {
+                var x = jsonObject[i].minX * scaleX;
+                var y = jsonObject[i].minY * scaleY;
+                var width = (jsonObject[i].maxX - jsonObject[i].minX) * scaleX;
+                var height = (jsonObject[i].maxY - jsonObject[i].minY) * scaleY;
+                var colors = {
+                    border: jsonObject[i].borderColor || window.sqDataSetColor(jsonObject[i].name).border
+                };
+
+                context.strokeStyle = colors.border;
+                context.lineWidth = 2;
+                context.strokeRect(x, y, width, height);
+            }
+        })();
+    </script>
+</div>

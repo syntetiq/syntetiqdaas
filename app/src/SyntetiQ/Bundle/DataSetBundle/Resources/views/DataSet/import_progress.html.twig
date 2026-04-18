@@ -1,0 +1,100 @@
+<style>
+    .sq-import-progress { margin-bottom: 8px; }
+    .sq-import-progress__item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid #dbe4ee;
+        border-radius: 6px;
+        background: #f8fbff;
+        margin-bottom: 6px;
+    }
+    .sq-import-progress__status {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .sq-import-progress__status--running    { background: #dbeafe; color: #1d4ed8; }
+    .sq-import-progress__status--new        { background: #f1f5f9; color: #475569; }
+    .sq-import-progress__status--complete   { background: #dcfce7; color: #15803d; }
+    .sq-import-progress__status--failed,
+    .sq-import-progress__status--cancelled  { background: #fee2e2; color: #b91c1c; }
+    .sq-import-progress__bar-wrap {
+        flex: 1;
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+    .sq-import-progress__bar {
+        height: 100%;
+        background: #0284c7;
+        border-radius: 999px;
+        transition: width .3s ease;
+    }
+    .sq-import-progress__bar--complete { background: #22c55e; }
+    .sq-import-progress__bar--failed   { background: #ef4444; }
+    .sq-import-progress__counts {
+        font-size: 12px;
+        color: #475569;
+        white-space: nowrap;
+    }
+    .sq-import-progress__time {
+        font-size: 11px;
+        color: #94a3b8;
+        white-space: nowrap;
+    }
+    .sq-import-progress__file {
+        font-size: 11px;
+        color: #64748b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+        white-space: nowrap;
+    }
+</style>
+
+<div class="sq-import-progress">
+
+    {% for import in imports %}
+        {% set percent = ((import.progress ?? 0) * 100)|round %}
+        {% set status = import.status %}
+        {% set barClass = 'sq-import-progress__bar' %}
+
+        {% if 'success' in status %}
+            {% set statusLabel = 'COMPLETE' %}
+            {% set barClass = barClass ~ ' sq-import-progress__bar--complete' %}
+        {% elseif 'failed' in status or 'cancelled' in status %}
+            {% set statusLabel = 'FAILED' %}
+            {% set barClass = barClass ~ ' sq-import-progress__bar--failed' %}
+        {% elseif 'running' in status %}
+            {% set statusLabel = 'RUNNING' %}
+        {% else %}
+            {% set statusLabel = 'QUEUED' %}
+        {% endif %}
+
+        <div class="sq-import-progress__item">
+            <span class="sq-import-progress__status sq-import-progress__status--{{ statusLabel|lower }}">
+                {{ statusLabel }}
+            </span>
+            <div class="sq-import-progress__bar-wrap">
+                <div class="{{ barClass }}" style="width: {{ percent }}%"></div>
+            </div>
+            <span class="sq-import-progress__counts">{{ percent }}%</span>
+            {% if import.itemCount %}
+                <span class="sq-import-progress__counts">{{ import.itemCount }} items</span>
+            {% endif %}
+            {% if import.fileName %}
+                <span class="sq-import-progress__file" title="{{ import.fileName }}">{{ import.fileName }}</span>
+            {% endif %}
+            {% if import.startedAt %}
+                <span class="sq-import-progress__time">{{ import.startedAt }}</span>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+</div>

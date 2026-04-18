@@ -1,0 +1,45 @@
+services:
+    _defaults:
+        public: true
+
+    SyntetiQ\Bundle\DataSetBundle\Controller\ItemImageUploadController:
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\DataSetBundle\Controller\ArchiveImportController:
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\DataSetBundle\Controller\DataSetController:
+        arguments:
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaReportViewBuilder'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+            - '@doctrine'
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\DataSetBundle\Controller\DataSetItemController:
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\DataSetBundle\Controller\DataSetExportController:
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\DataSetBundle\Controller\DataSetImportProgressController:
+        arguments:
+            - '@doctrine'
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }

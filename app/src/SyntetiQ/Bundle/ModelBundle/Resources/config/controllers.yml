@@ -1,0 +1,43 @@
+services:
+    _defaults:
+        public: true
+
+    SyntetiQ\Bundle\ModelBundle\Controller\ModelController:
+        arguments:
+            - '@oro_form.update_handler'
+            - '@translator'
+            - '%syntetiq_model.engines%'
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\ModelBundle\Controller\ModelPretrainedUploadController:
+        arguments:
+            - '@doctrine'
+            - '%syntetiq_model.engines%'
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\ModelBundle\Controller\ModelBuildController:
+        arguments:
+            - '@oro_form.update_handler'
+            - '@translator'
+            - '@oro_attachment.file_manager'
+            - '@doctrine'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\BuildRuntimeLogViewBuilder'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaReportViewBuilder'
+            - '@SyntetiQ\Bundle\ModelBundle\Service\DatasetQaStorageManager'
+            - '@SyntetiQ\Bundle\ModelBundle\Provider\ModelBuildArtifactSyncMessageSender'
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }
+
+    SyntetiQ\Bundle\ModelBundle\Controller\TestScriptController:
+        calls:
+            - ['setContainer', ['@Psr\Container\ContainerInterface']]
+        tags:
+            - { name: container.service_subscriber }

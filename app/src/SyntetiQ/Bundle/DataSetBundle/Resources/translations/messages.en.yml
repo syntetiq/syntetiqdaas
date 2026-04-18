@@ -1,0 +1,498 @@
+syntetiq:
+    dataset:
+        button:
+            import.label: Import Data Set
+            upload.label: Upload Images
+            add_item.label: Add Data Set Item
+            items.label: Dataset Items
+            gallery.label: Dataset Gallery
+            edit.label: Edit Data Set
+            export.label: Export Data Set
+            create.label: Create Data Set
+        import:
+            dialog:
+                title: Import Data Set
+        page:
+            title:
+                label: 'Data Set'
+        view_all:
+            label: 'View All Data Sets'
+
+        entity_plural_label: Data Sets
+        entity_label: Data Set
+        entity_description: Data Set
+        entity_grid_all_view_label: All %entity_plural_label%
+        id.label: Id
+        name.label: Name
+        owner.label: Owner
+        organization.label: Organization
+        created_at.label: Created At
+        image_size.label: Image Size
+        number.label: Number of images
+        items.label: Items
+        dataset_qa_status.label: Dataset QA Status
+        dataset_qa_started_at.label: Dataset QA Started At
+        dataset_qa_finished_at.label: Dataset QA Finished At
+        dataset_qa_heartbeat_at.label: Dataset QA Heartbeat At
+        dataset_qa_progress.label: Dataset QA Progress
+        dataset_qa_progress_message.label: Dataset QA Progress Message
+        dataset_qa_error_output.label: Dataset QA Error Output
+
+        form:
+            choose: Select a Data Set
+        items_view:
+            label: Items view
+            gallery: Gallery View
+            grid: Grid View
+        sections:
+            general: General
+            items: Items
+        qa:
+            help:
+                summary:
+                    total_score:
+                        what: Weighted overall dataset QA score built from class balance, box validity, consistency, duplicates, split health, and size coverage.
+                        meaning: Higher is better. Scores above 80 are usually healthy, 60-80 means mixed quality, and below 60 usually means cleanup is needed before training.
+                        why: Low overall quality can reduce training stability, hurt precision and recall, and make validation results less trustworthy.
+                        limitations: This is a heuristic score, not a direct prediction of model performance. It summarizes several QA signals but cannot replace real validation on a representative benchmark.
+                        improve:
+                            1: Fix invalid or suspicious boxes first because annotation errors damage supervision directly.
+                            2: Reduce duplicates and split leakage so the model learns variation instead of memorizing repeated scenes.
+                            3: Add data for weak classes and missing object sizes to improve coverage.
+                    images:
+                        what: Total number of images included in the QA run.
+                        meaning: More images help only if they add new situations. A high count with many near-duplicates is less useful than a smaller but more diverse dataset.
+                        why: Too little image diversity makes the model overfit to limited backgrounds, lighting, viewpoints, or scenes.
+                        limitations: Image count alone says nothing about annotation quality or diversity quality.
+                        improve:
+                            1: Add images from different cameras, times, distances, and environments.
+                            2: Prefer new edge cases and failure scenarios over more copies of the same scene.
+                            3: Remove accidental duplicates so the count reflects real variety.
+                    objects:
+                        what: Total number of annotated objects across the dataset.
+                        meaning: This often matters more than raw image count for detection tasks. Low object volume, especially for rare classes, usually means weaker recall.
+                        why: The model learns from object examples, not just images. Sparse object coverage makes localization and classification less reliable.
+                        limitations: A high object count can still hide poor label balance or weak annotation consistency.
+                        improve:
+                            1: Annotate more objects in existing images where labels are still missing.
+                            2: Collect more images for classes that appear rarely.
+                            3: Review unlabeled positives because missed objects silently reduce useful training signal.
+                    classes:
+                        what: Number of distinct labels or classes found in the dataset.
+                        meaning: More classes increase task complexity. That is fine when each class has enough clean examples, but risky when classes are sparse or overlapping.
+                        why: Too many thinly populated classes often cause class confusion, low recall on rare labels, and unstable evaluation.
+                        limitations: Class count does not tell you whether label definitions are clear or consistently applied.
+                        improve:
+                            1: Add more examples for underrepresented classes before expanding taxonomy further.
+                            2: Merge classes that are visually ambiguous or not operationally distinct.
+                            3: Make sure label definitions are clear so annotators apply classes consistently.
+                    annotated:
+                        what: Images that contain at least one annotation.
+                        meaning: A strong annotated share is usually good for object detection. If this is low, the dataset may not provide enough positive examples.
+                        why: Too few annotated positives weakens the model's ability to learn objects and can bias training toward background.
+                        limitations: A high annotated count does not guarantee that the labels are complete or correct.
+                        improve:
+                            1: Review images that should contain objects but are currently empty.
+                            2: Backfill annotations for partially labeled images.
+                            3: Keep intentional negative images, but make sure they do not dominate the dataset.
+                    unannotated:
+                        what: Images with no annotations attached.
+                        meaning: Some empty images are useful as negatives, but too many can mean missed labels or an imbalanced dataset.
+                        why: If empty images dominate, the model can become too conservative and miss real objects, reducing recall.
+                        limitations: This metric cannot tell intentional negative images from accidentally unlabeled positives.
+                        improve:
+                            1: Audit a sample of empty images to confirm they are truly negative.
+                            2: Annotate missed objects instead of leaving partially labeled images empty.
+                            3: Remove irrelevant empty images if they do not support the production use case.
+                sub_scores:
+                    default:
+                        what: A normalized 0-100 quality component used in the overall QA score.
+                        meaning: Higher is better. Lower values indicate a concentrated weakness in this part of the dataset.
+                        why: Weak component scores usually point to concrete dataset issues that will affect model quality or evaluation trust.
+                        limitations: This score is still heuristic and should be read together with the related charts and review exports.
+                        improve:
+                            1: Open the related review exports and artifacts to find the examples behind the low score.
+                            2: Fix the underlying annotation or split issue before relying on the dataset for training decisions.
+                    class_balance:
+                        what: Measures how evenly objects are distributed across classes by comparing the smallest and largest class counts.
+                        meaning: Higher means classes are represented more evenly. Lower means some classes are rare while others dominate.
+                        why: Class imbalance often lowers recall on rare classes and increases confusion toward dominant classes.
+                        limitations: This score looks at counts, not visual difficulty. Two classes can have similar counts and still differ greatly in difficulty.
+                        improve:
+                            1: Collect or annotate more examples for rare classes.
+                            2: Reduce oversampled dominant classes when possible.
+                            3: Merge overlapping labels if the taxonomy is too granular for the available data.
+                    bbox_validity:
+                        what: Checks how many boxes avoid validation flags such as zero area, out-of-bounds coordinates, extreme aspect ratios, or duplicate boxes.
+                        meaning: Higher means annotation geometry looks clean. Lower means many boxes are malformed or suspicious.
+                        why: Bad boxes directly damage localization training and can teach the model the wrong object shape or position.
+                        limitations: Geometry can look valid while still being semantically wrong, loose, or incomplete.
+                        improve:
+                            1: Review suspicious annotation exports and fix invalid coordinates first.
+                            2: Tighten annotation or export tooling so boxes stay inside image bounds.
+                            3: Remove duplicated boxes and standardize how tight boxes should be around objects.
+                    consistency_proxy:
+                        what: Heuristic consistency score based on same-class overlaps, size and aspect-ratio outliers, and suspicious sample rates.
+                        meaning: Higher means annotations follow a more stable pattern. Lower means label or box conventions vary from image to image.
+                        why: Inconsistent annotations create noisy supervision, which hurts localization quality and class reliability.
+                        limitations: This is a proxy metric. It can highlight drift and anomalies, but it cannot fully prove annotation correctness.
+                        improve:
+                            1: Review overlap issues and suspicious samples for annotation drift.
+                            2: Write or tighten labeling guidelines for box tightness and class usage.
+                            3: Run a focused audit on classes with frequent size or aspect outliers.
+                    duplicates:
+                        what: Penalizes exact duplicates, near-duplicate images, and leakage across splits.
+                        meaning: Higher means the dataset is more unique. Lower means too many repeated or cross-split similar images are present.
+                        why: Duplicate-heavy datasets encourage memorization and can inflate validation or test performance without improving real-world generalization.
+                        limitations: Duplicate detection depends on thresholds and embedding similarity, so some subtle duplicates can still remain.
+                        improve:
+                            1: Remove exact duplicates and collapse near-duplicate bursts from the same scene.
+                            2: Keep train, validation, and test visually separated so leakage does not inflate metrics.
+                            3: Prefer adding new scenes instead of more frames from the same moment.
+                    split_health:
+                        what: Scores evaluation split quality using class coverage in val and test plus leakage penalties.
+                        meaning: Higher means val and test contain the needed classes and appear reasonably isolated from training data. Lower means missing coverage or leakage.
+                        why: Bad splits make evaluation misleading, so a model can look strong on paper while failing in production.
+                        limitations: Split health checks coverage and leakage, but not whether the split difficulty matches production reality.
+                        improve:
+                            1: Ensure every important class appears in validation and test.
+                            2: Move leaked or near-identical samples so splits are independent.
+                            3: Rebuild splits after major dataset updates instead of appending ad hoc.
+                    size_coverage:
+                        what: Measures whether objects appear across tiny, small, medium, and large size buckets.
+                        meaning: Higher means the model will see broader scale variation. Lower means objects mostly appear at only one or two sizes.
+                        why: Weak size coverage often produces brittle performance when objects appear closer, farther away, or at different crop scales.
+                        limitations: Bucket coverage says nothing about whether each bucket has enough examples per class.
+                        improve:
+                            1: Collect examples from different distances and zoom levels.
+                            2: Add more images with small and hard-to-see objects if those matter in production.
+                            3: Check camera placement and crop strategy so object scale is not unnaturally narrow.
+                section_status:
+                    default:
+                        what: Shows whether this QA analysis stage finished and produced output.
+                        meaning: This block describes execution state for one QA stage, not whether the dataset passed that check.
+                        why: If a stage does not finish, that blind spot can hide dataset problems and make the QA summary incomplete.
+                        limitations: A completed stage can still surface issues, and a succeeded status does not mean the dataset is clean or production-ready.
+                        improve:
+                            1: Open the related logs, charts, and review exports to inspect what the stage actually found.
+                            2: Rerun QA after fixing missing dependencies, bad inputs, or stage-specific failures.
+                    dataset_info:
+                        what: Builds the core dataset summary such as image, object, and class counts.
+                        meaning: If this stage succeeds, the baseline dataset counts were computed and can feed the rest of the QA summary.
+                        why: Reliable top-level counts are the baseline for understanding coverage, sparsity, and dataset scale.
+                        limitations: Success here means the summary was computed, not that the source annotations are complete, consistent, or correct.
+                        improve:
+                            1: Check that dataset files and annotations can be parsed correctly.
+                            2: Fix broken paths, unsupported files, or malformed annotation records before rerunning QA.
+                    class_distribution:
+                        what: Analyzes how objects are distributed across classes and generates class-level counts.
+                        meaning: If this stage succeeds, class balance and sparsity can be inspected.
+                        why: Class distribution strongly influences recall, class confusion, and whether evaluation reflects the real task.
+                        limitations: Success here only means counts were produced. It does not validate class definitions or annotation consistency.
+                        improve:
+                            1: Standardize label naming so the same class is not split across variants.
+                            2: Add data for underrepresented classes and revisit overly dominant ones.
+                    bbox_statistics:
+                        what: Checks bounding-box size, aspect ratio, validation flags, and heuristic outliers.
+                        meaning: If this stage succeeds, geometry health signals are available for review.
+                        why: Box geometry quality directly affects localization accuracy and detector stability.
+                        limitations: Success means the numeric checks ran. It does not guarantee every box is tight, complete, or semantically correct.
+                        improve:
+                            1: Audit malformed coordinates and duplicate boxes in the suspicious exports.
+                            2: Fix annotation tooling or import logic if geometry issues repeat systematically.
+                    suspicious_annotations:
+                        what: Collects boxes and images with the strongest validation flags or unusual annotation patterns.
+                        meaning: If this stage succeeds, a prioritized review queue was generated for manual inspection.
+                        why: A small number of bad annotations can disproportionately damage training if they remain in the dataset.
+                        limitations: This stage highlights suspicious cases, not every possible bad annotation. Clean-looking errors can still remain.
+                        improve:
+                            1: Review the exported suspicious samples in priority order and correct obvious errors.
+                            2: Use repeated issue patterns to refine annotation instructions or validation rules.
+                    duplicates:
+                        what: Runs duplicate, near-duplicate, split leakage, and uniqueness analysis.
+                        meaning: If this stage succeeds, redundancy signals are available for review.
+                        why: Hidden redundancy inflates metrics and reduces real-world generalization.
+                        limitations: Succeeded means the duplicate analysis completed, not that no duplicates exist. Results depend on similarity thresholds and available feature extraction.
+                        improve:
+                            1: Remove duplicate clusters and rebalance bursty capture sessions.
+                            2: Resolve dependency or runtime issues if duplicate analysis failed so leakage is not missed.
+                    split_quality:
+                        what: Examines how classes and object sizes are distributed across train, validation, and test.
+                        meaning: If this stage succeeds, split coverage and leakage-related weaknesses can be inspected.
+                        why: Poor split design is one of the fastest ways to get overly optimistic validation numbers.
+                        limitations: A succeeded stage does not mean the split is realistic for deployment. It only means the configured checks completed.
+                        improve:
+                            1: Rebuild splits so each important class and size range is represented.
+                            2: Keep temporally or visually related samples in one split instead of spreading them across all splits.
+                    image_difficulty:
+                        what: Ranks images by heuristic difficulty using object count, density, small-object pressure, and class diversity.
+                        meaning: If this stage succeeds, the hardest images can be reviewed separately from average cases.
+                        why: Hard images often expose annotation problems and deployment edge cases earlier than average images do.
+                        limitations: Difficulty is heuristic and task-dependent. A low score does not mean an image is unimportant.
+                        improve:
+                            1: Review the top difficult images to confirm labels are correct and complete.
+                            2: Use these cases for targeted retraining, sampling, or annotation guideline updates.
+                    consistency:
+                        what: Compares annotations against model-generated detections to estimate localization consistency and missing or extra objects.
+                        meaning: If this stage succeeds, model-assisted consistency checks ran and produced comparison outputs.
+                        why: Consistency checks can reveal annotation drift, missed objects, and unstable localization conventions that hurt training quality.
+                        limitations: Success here means the comparison ran. It does not prove the model is correct, and the result quality depends on the assistant model used for comparison.
+                        improve:
+                            1: Inspect missing and extra object outputs for recurring annotation patterns.
+                            2: Fix model or dependency issues if this stage failed so the cross-check can run next time.
+                    quality_score:
+                        what: Builds the final weighted quality summary from the individual sub-scores.
+                        meaning: If this stage succeeds, the overall QA score and component scores were aggregated successfully.
+                        why: The final score is the quickest way to see whether the dataset likely needs more cleanup before training.
+                        limitations: A succeeded score stage does not mean the score is high. It only means the aggregation completed.
+                        improve:
+                            1: Address the weakest sub-scores instead of chasing the total score directly.
+                            2: Rerun QA after fixes so the final score reflects the cleaned dataset.
+                status:
+                    idle: This QA stage has not started yet, so no result is available.
+                    queued: This QA stage is waiting to run. No conclusions should be drawn yet.
+                    running: This QA stage is still in progress. Results may be incomplete or change while the run continues.
+                    succeeded: This QA stage ran and produced its output. It does not mean no issues were found and it does not certify the dataset as good by itself.
+                    failed: This QA stage did not complete successfully, so this area of QA is missing or incomplete.
+                    skipped: This QA stage was intentionally not run, usually because the dataset did not have enough required data or a prerequisite was unavailable.
+                    unknown: The system could not determine the exact state of this QA stage.
+                artifacts:
+                    class_histogram:
+                        what: Bar chart showing how many objects exist for each class.
+                        meaning: Very tall bars next to very short ones usually mean class imbalance. Flat or closer bars usually mean healthier coverage.
+                        why: Strong imbalance often reduces recall on rare classes and biases predictions toward dominant classes.
+                        limitations: This chart shows counts only. It does not show class difficulty, annotation quality, or whether the class definitions overlap.
+                        improve:
+                            1: Add more labeled examples for rare classes.
+                            2: Reduce duplicate-heavy dominant classes if they overwhelm the dataset.
+                            3: Revisit the taxonomy if some classes are too rare to be practical.
+                    bbox_area_histogram:
+                        what: Histogram of relative bounding-box areas across the dataset.
+                        meaning: It shows whether boxes are mostly tiny, mostly large, or spread across scales. A very narrow shape often means limited size variety.
+                        why: Weak size variety can make the model brittle when object distance or crop scale changes.
+                        limitations: It aggregates all classes together, so class-specific size problems can be hidden.
+                        improve:
+                            1: Add examples from different distances and zoom levels.
+                            2: Check whether production use cases include more small or large objects than the dataset does now.
+                    bbox_aspect_ratio_histogram:
+                        what: Histogram of bounding-box aspect ratios.
+                        meaning: Extreme tails or strange spikes can indicate suspicious box geometry or mixed annotation conventions.
+                        why: Unstable box shapes can hurt localization quality and make the model learn inconsistent object extents.
+                        limitations: Some classes naturally have unusual aspect ratios, so this chart should be interpreted together with class context.
+                        improve:
+                            1: Review classes that create the longest tails or odd spikes.
+                            2: Standardize box-drawing guidance so annotators frame objects consistently.
+                    objects_per_image:
+                        what: Histogram showing how many objects appear per image.
+                        meaning: It reveals whether the dataset is dominated by empty, sparse, or crowded scenes.
+                        why: Scene density affects difficulty, false-positive pressure, and how well the model handles clutter.
+                        limitations: It does not show which classes create the density or whether dense images are representative of production.
+                        improve:
+                            1: Add more crowded scenes if production often contains many objects together.
+                            2: Keep a balanced mix of sparse and dense scenes rather than overfitting to one pattern.
+                    size_buckets:
+                        what: Bar chart of object counts across tiny, small, medium, and large size buckets.
+                        meaning: Missing or very weak buckets mean the model will have little supervision for that object scale.
+                        why: Poor scale coverage often leads to unstable performance when objects appear much smaller or larger at inference time.
+                        limitations: This chart does not show whether each bucket is balanced per class.
+                        improve:
+                            1: Add examples for the weak or empty size buckets.
+                            2: Capture more variation in distance, zoom, and crop scale.
+                    validation_flags:
+                        what: Bar chart of invalid or suspicious bounding-box validation flags.
+                        meaning: High bars point to recurring annotation geometry problems that should be fixed first.
+                        why: These are direct quality defects that can corrupt localization training.
+                        limitations: The chart only covers implemented validation rules. Semantically wrong but numerically valid boxes can still pass.
+                        improve:
+                            1: Fix the dominant flag types first because they usually represent systematic issues.
+                            2: Inspect the suspicious annotation exports to find the concrete samples behind those bars.
+                    difficulty:
+                        what: Histogram of heuristic image difficulty scores.
+                        meaning: It shows whether the dataset mostly contains easy images or also includes harder scenes with density, diversity, and small-object pressure.
+                        why: Models trained only on easy images often fail on the hard cases that matter most in production.
+                        limitations: Difficulty is heuristic and not a substitute for real error analysis on production-like failures.
+                        improve:
+                            1: Review the hardest images and confirm labels are complete.
+                            2: Add more production-like hard cases if the dataset is too easy overall.
+                    uniqueness_distribution:
+                        what: Histogram of uniqueness scores used for redundancy analysis.
+                        meaning: A pile-up at low uniqueness suggests many visually similar images, while a broader spread usually means better variety.
+                        why: Low uniqueness often means the dataset contains repeated scenes that inflate confidence without improving generalization.
+                        limitations: Similarity is embedding-based, so not every near-repeat will be captured perfectly.
+                        improve:
+                            1: Remove low-uniqueness bursts from the same scene or timeframe.
+                            2: Add more genuinely different environments, backgrounds, and viewpoints.
+                    localization_iou:
+                        what: Histogram of IoU values between annotations and model-generated detections used for consistency analysis.
+                        meaning: Higher values suggest closer alignment between annotations and model-assisted localization. Lower values or weak coverage can indicate inconsistent boxes.
+                        why: Large disagreement can reveal loose boxes, missed objects, or annotation drift.
+                        limitations: This chart depends on the helper model used for comparison, so poor helper-model predictions can affect the distribution.
+                        improve:
+                            1: Inspect samples with low IoU or many missing and extra objects.
+                            2: Tighten labeling guidance where consistent localization is important.
+
+        datasetitem:
+            entity_plural_label: Data Set Items
+            entity_label: Data Set Item
+            entity_description: Data Set Item
+            entity_grid_all_view_label: All Data Set Items
+            name.label: Name
+            image.label: Image
+            group.label: Group
+            id.label: Id
+            data_set.label: Data Set
+            object_configuration.label: Object Configuration
+            img_height.label: Image Height
+            img_width.label: Image Width
+            owner.label: Owner
+            organization.label: Organization
+            external_id.label: External Id
+            import_id.label: Import Id
+            item_tags.label: Item Tags
+            legacy_tag.label: Legacy Tag
+            ready.label: Ready
+            source_integration.label: Source Integration
+            source_type.label: Source Type
+            grid:
+                image_mini.label: Image Mini
+                image_nano.label: Image Nano
+                objects.label: Objects
+                file_name.label: File Name
+                tags.label: Tags
+                modified_at.label: Modified At
+                bbox_area.label: BBox Area
+            filter:
+                label.label: Label
+            group_option:
+                train: Train
+                validation: Validation
+                test: Test
+            source_type_option:
+                manual: Manual
+                omniverse: Omniverse
+            mass_action:
+                mark_ready:
+                    label: Mark Ready
+                    confirm_title: Mark Ready
+                    confirm_content: Are you sure you want to mark selected items ready?
+                    success: Selected items marked ready.
+                    error: Selected items were not updated.
+                mark_not_ready:
+                    label: Mark Not Ready
+                    confirm_title: Mark Not Ready
+                    confirm_content: Are you sure you want to mark selected items not ready?
+                    success: Selected items marked not ready.
+                    error: Selected items were not updated.
+                reset_labels:
+                    label: Reset Labels
+                    confirm_title: Reset Labels
+                    confirm_content: Are you sure you want to reset labels for selected items?
+                    success: Selected item labels reset.
+                    error: Selected item labels were not updated.
+                add_tag:
+                    label: Add Tag
+                    confirm_title: Add Tag
+                    confirm_content: Enter a tag to add to selected items.
+                    confirm_input_label: Tag
+                    confirm_input_placeholder: Enter tag
+                    confirm_validation_error: Tag is required.
+                    confirm_ok: Add Tag
+                    success: Tag added to selected items.
+                    error: Tag was not added.
+                remove_tag:
+                    label: Remove Tag
+                    confirm_title: Remove Tag
+                    confirm_content: Enter a tag to remove from selected items.
+                    confirm_input_label: Tag
+                    confirm_input_placeholder: Enter tag
+                    confirm_validation_error: Tag is required.
+                    confirm_ok: Remove Tag
+                    success: Tag removed from selected items.
+                    error: Tag was not removed.
+                rename_label:
+                    label: Rename Label
+                    confirm_title: Rename Label
+                    confirm_content: Enter the current label and the new label to apply to selected items.
+                    confirm_old_input_label: Current Label
+                    confirm_old_input_placeholder: Enter current label
+                    confirm_new_input_label: New Label
+                    confirm_new_input_placeholder: Enter new label
+                    confirm_old_validation_error: Current label is required.
+                    confirm_new_validation_error: New label is required.
+                    confirm_same_value_error: New label must differ from current label.
+                    confirm_ok: Rename Label
+                    success: Label renamed on selected items.
+                    error: Label was not renamed.
+                random_split:
+                    label: Random Split
+                    confirm_title: Random Split
+                    confirm_content: Set train, validation, and test percentages for the selected items. The total must be 100%.
+                    confirm_input_suffix: '%'
+                    confirm_total_label: Total
+                    confirm_validation_error: Train, validation, and test percentages must be whole numbers from 0 to 100 and total 100.
+                    confirm_ok: Apply Split
+                    success: Split groups assigned to selected items.
+                    error: Split groups were not assigned.
+            row_action:
+                mark_ready:
+                    success: Item marked ready.
+                    error: Item was not updated.
+                mark_not_ready:
+                    success: Item marked not ready.
+                    error: Item was not updated.
+                reset_labels:
+                    confirm_title: Reset Labels
+                    confirm_content: Are you sure you want to reset labels for this item?
+                    success: Item labels reset.
+                    error: Item labels were not updated.
+
+            sections:
+                general: General
+
+            button:
+                edit.label: Edit Data Set Item
+        
+        datasetitemtag:
+            entity_plural_label: Data Set Item Tags
+            entity_label: Data Set Item Tag
+            entity_description: Data Set Item Tag
+            id.label: Id
+            name.label: Name
+            owner.label: Owner
+            organization.label: Organization
+            data_set_item.label: Data Set Item
+
+        datasetexport:
+            entity_plural_label: Data Set Exports
+            entity_label: Data Set Export
+            entity_description: Data Set Export
+            entity_grid_all_view_label: All %entity_plural_label%
+            id.label: Id
+            owner.label: Owner
+            organization.label: Organization
+            data_set_id.label: Data Set Id
+            started_at.label: Started At
+            finished_at.label: Finished At
+            result_file.label: Result File
+
+        itemobjectconfiguration:
+            entity_label: Item Object Configuration
+            entity_plural_label: Item Object Configurations
+            entity_description: Item Object Configuration
+            data_set_item.label: Data Set Item
+            id.label: Id
+            min_x.label: Min X
+            min_y.label: Min Y
+            max_x.label: Max X
+            max_y.label: Max Y
+            name.label: Name
+            truncated.label: Truncated
+            latitude.label: Latitude
+            longitude.label: Longitude
+            owner.label: Owner
+            organization.label: Organization
+
+    controller:
+        data_set_item.saved.message: Data Set Item has been saved
+        dataset.saved.message: Data set has been saved
+        dataset.cannot_delete_has_items: Cannot delete dataset that contains items.

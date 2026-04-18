@@ -1,0 +1,144 @@
+{% extends '@OroUI/actions/update.html.twig' %}
+{% import '@OroUI/macros.html.twig' as UI %}
+
+
+{% oro_title_set({params : {
+    '%identifier%': entity.id|default('N/A'|trans),
+    '%entityName%': 'syntetiq.dataset.datasetitem.entity_label'|trans
+} }) %}
+
+{% set formAction = entity.id ?
+    path('syntetiq_model_data_set_item_edit', { 'id': entity.id, 'returnUrl': returnUrl|default(null) }) :
+    path('syntetiq_model_data_set_item_create', {'dataSetId': entity.dataSet.id, 'returnUrl': returnUrl|default(null) }) %}
+{% set defaultReturnUrl = path('syntetiq_model_data_set_items', {
+    id: entity.dataSet.id,
+    _enableContentProviders: 'mainMenu'
+}) %}
+{% set resolvedReturnUrl = returnUrl|default(defaultReturnUrl) %}
+{% set dataSetViewUrl = path('syntetiq_model_data_set_view', {
+    id: entity.dataSet.id
+}) %}
+{% set dataSetItemsUrl = path('syntetiq_model_data_set_items', {
+    id: entity.dataSet.id,
+    _enableContentProviders: 'mainMenu'
+}) %}
+
+{% block navButtons %}
+    {% set html = UI.saveAndCloseButton({
+        'label': 'Close',
+        'action': {'redirectUrl': resolvedReturnUrl}|json_encode
+    }) %}
+
+    {{ UI.dropdownSaveButton({'html': html}) }}
+
+    {{ parent() }}
+{% endblock navButtons %}
+
+{% block pageHeader %}
+	{% if entity.id %}
+		{% set breadcrumbs = {
+            'entity': entity,
+            'indexPath': path('syntetiq_model_data_set_index'),
+            'indexLabel': 'syntetiq.dataset.page.title.label'|trans,
+            'additional': [{
+                'indexPath': dataSetViewUrl,
+                'indexLabel': entity.dataSet.name
+            }, {
+                'indexPath': dataSetItemsUrl,
+                'indexLabel': 'syntetiq.dataset.button.items.label'|trans
+            }],
+            'entityTitle': '#' ~ (entity.id|default('N/A'|trans))
+        } %}
+
+		{{ parent() }}
+	{% else %}
+		{% set title = 'oro.ui.create_entity'|trans({'%entityName%': 'syntetiq.dataset.datasetitem.entity_label'|trans}) %}
+		{% include '@OroUI/page_title_block.html.twig' with { title: title } %}
+	{% endif %}
+
+
+{% endblock pageHeader %}
+
+{% block content_data %}
+	{% set id = 'data-set-edit' %}
+
+	{% set generalBlock %}
+
+{#	<div class="responsive-cell">#}
+        <div style="display:none;">
+            {{ form_widget(form.image.file) }}
+            {{ form_widget(form.image.emptyFile) }}
+            {% do form.image.setRendered() %}
+            {{ form_row(form.group) }}
+            {{ form_widget(form.readyDirtyState, { value: 0 }) }}
+            {{ form_widget(form.ready) }}
+        </div>
+		{{ form_row(form.hiddenObjectInfo) }}
+
+		<div class="row-fluid dataset-item-editor-shell" {{ UI.renderPageComponentAttributes({
+                view: 'syntetiqdataset/js/app/views/dataset-item-view',
+                options: {
+                    dataSetId: entity.dataSet.id,
+                    hiddenInputSelector: '.hidden-object-info',
+                    groupInputSelector: '#' ~ form.group.vars.id,
+                    readyDirtyInputSelector: '#' ~ form.readyDirtyState.vars.id,
+                    readyInputSelector: '#' ~ form.ready.vars.id,
+                    groupOptions: [
+                        { value: 'train', label: 'Train' },
+                        { value: 'val', label: 'Validation' },
+                        { value: 'test', label: 'Test' }
+                    ],
+                    groupValue: entity.group|default('train'),
+                    readyValue: entity.ready|default(false),
+                    canDeleteItem: entity.id and is_granted('syntetiq_model_data_set_item_delete'),
+                    imageSrc: entity.image ? file_url(entity.image) : null,
+                    returnUrl: resolvedReturnUrl,
+                    titleOptions: titleOptions|default([]),
+                    previousItemAction: previousItemAction|default(null),
+                    nextItemAction: nextItemAction|default(null)
+                }
+             }) }}>
+			<div class="svelte-container"></div>
+		</div>
+
+{#	</div>#}
+	<div class="responsive-cell dataset-item-form-panel">
+        <input type="hidden" name="returnUrlState" value="{{ resolvedReturnUrl }}">
+		{{ form_rest(form) }}
+	</div>
+	{% endset %}
+
+    {% set data = oro_form_process({
+        'formErrors': form_errors(form)
+    }, form, entity, id) %}
+
+    <div class="scrollspy-main-container clearfix sq-dataset-item-edit-page">
+        {% if data.formErrors is defined and data.formErrors | length %}
+            <div class="customer-info-actions container-fluid well-small alert-wrap" role="alert">
+                <div class="alert alert-error alert-dismissible">
+                    <button class="close" type="button" data-dismiss="alert" data-target=".alert-wrap" aria-label="{{ 'Close'|trans }}">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    {{ data.formErrors|raw|nl2br }}
+                </div>
+            </div>
+        {% endif %}
+        <div class="scrollspy scrollable-container form-container">
+            <div class="container-fluid">
+                <div class="responsive-section">
+                    <div class="section-content">
+                        <div class="row-fluid">
+                            <fieldset class="form-horizontal">
+                                <div class="responsive-cell dataset-item-edit-cell clearfix">
+                                    {{ generalBlock|raw }}
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content_data %}
+
+{% block sync_content_tags %}{% endblock %}
