@@ -25,12 +25,12 @@ SyntetiQ is a machine learning dataset management and model training platform bu
 - **PostgreSQL 16** + **Redis**
 - **Svelte 5** (image annotation editor component)
 - **Node.js 24 / pnpm 10** (frontend tooling)
-- **Python / uv** (model training scripts)
+- **Python / conda** (model training scripts)
 - **Docker** (development environment via `server/`)
 
 ## Setup
 
-See `server/README.md` for Docker environment setup and `CLAUDE.md` for all build/development commands.
+See `server/README.md` for Docker environment setup.
 
 ```bash
 cd server
