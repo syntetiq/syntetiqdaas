@@ -16,14 +16,14 @@ robotics stack delivered for the [euROBIN](https://www.eurobin-project.eu/)
 ## SyntetiQ stack at a glance
 
 ```
-                   ┌──────────────────────────┐
-                   │     SyntetiQ DaaS        │
-                   │     (this repository)    │
-                   │                          │
-     ┌──────────┐  │  • Dataset import / QA   │  ┌──────────┐
+                    ┌──────────────────────────┐
+                    │     SyntetiQ DaaS        │
+                    │     (this repository)    │
+                    │                          │
+     ┌──────────┐   │  • Dataset import / QA   │  ┌───────────┐
      │ isaacsim │──▶│  • Annotation editor     │◀─│  robolab  │
      │   app    │   │  • Model training (YOLO/ │  │           │
-     └──────────┘   │     SSD/Jetson engines)  │  └──────────┘
+     └──────────┘   │     SSD/Jetson engines)  │  └───────────┘
    Synthetic image  │  • Artefact registry     │  TIAGo episodes:
    generator (REST  │  • TensorBoard, GCS      │  HDF5 + manifests
    on Omniverse /   │                          │  + multi-camera
