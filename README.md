@@ -5,9 +5,6 @@ with synthetic-data generation via NVIDIA Omniverse / Isaac Sim and
 robotic-demonstration ingest from RoboLab. Built on top of
 [OroPlatform 7](https://github.com/oroinc/platform).
 
-Production instance: <https://u.casus-belli.com> (read-only access on
-request). Released under the [Apache License 2.0](LICENSE).
-
 This repository is one of three components of the SyntetiQ AI-driven
 robotics stack delivered for the [euROBIN](https://www.eurobin-project.eu/)
 3rd Open Call Technology Exchange Programme (Sub-Grant Agreement
